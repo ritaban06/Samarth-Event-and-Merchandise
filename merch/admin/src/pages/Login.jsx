@@ -15,8 +15,8 @@ import PropTypes from 'prop-types'
 
 function Login({ setIsAuthenticated }) {
   const [credentials, setCredentials] = useState({
-    username: '123',
-    password: 'Fuck-You'
+    username: '',
+    password: ''
   })
   const [error, setError] = useState('')
   const navigate = useNavigate()
