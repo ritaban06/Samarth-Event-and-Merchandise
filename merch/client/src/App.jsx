@@ -46,50 +46,19 @@ const App = () => {
             <div className="bg-red-100 text-red-700 p-4">{oauthError}</div>
           )}
 
-          {/* Background Wrapper (Ensures Scrolling) */}
-          <div className="relative w-full min-h-screen overflow-hidden">
-            {/* Scrolling Background Image */}
-            <div
-              className="absolute top-0 left-0 w-full h-full bg-cover bg-center blur-md flex justify-center items-center"
-              style={{
-                backgroundImage:
-                  "url('https://blogger.googleusercontent.com/img/a/AVvXsEhTNh1xCYh7PMsnL0QLMwr4oGYxgJA01bVhoGNZleklWiUj0-sxpVoBUjMlvIHR2yGmT3O8YKTNSiYRRoGwZoIfG1Io5gx-f-ja9tYP1UQMYqlTJeUBQNmcSxk7nhtxt3S-wp-Vn9uav-SckL9ZP9EgLgr9iIOmFkNGSamr0xVQPLHN6KvhMvIyejPUPsw')",
-                backgroundSize: "cover",
-                backgroundPosition: "center",
-                backgroundRepeat: "no-repeat",
-              }}
-            ></div>
-
-            {/* Dark Blue Gradient Overlay */}
-            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-blue-950/80 via-transparent to-blue-950/80"></div>
-            <div className="absolute top-0 left-0 w-full h-full"></div>
-            {/* App Content */}
-            <div className="relative z-10">
-              <Navbar isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} />
-              <BgParticles />
+          <div className="min-h-screen bg-[#0a1929] text-white flex flex-col">
+            <Navbar isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} />
+            <main className="flex-grow">
               <Routes>
                 <Route path="/" element={<Home />} />
-                <Route path="/events" element={<Events />} />
-                <Route
-                  path="/login"
-                  element={<Login setIsLoggedIn={setIsLoggedIn} />}
-                />
+                <Route path="/products" element={<Products />} />
+                <Route path="/cart" element={<Cart />} />
+                <Route path="/orders" element={<Orders />} />
+                <Route path="/login" element={<Login setIsLoggedIn={setIsLoggedIn} />} />
                 <Route path="/register" element={<Register />} />
-                <Route path="/teams" element={<Teams />} />
-                <Route
-                  path="/otp-verification"
-                  element={<OtpVerification setIsLoggedIn={setIsLoggedIn} />}
-                />
-                <Route
-                  path="/profile"
-                  element={
-                    <ProtectedRoute>
-                      <Profile />
-                    </ProtectedRoute>
-                  }
-                />
               </Routes>
-            </div>
+            </main>
+            <Footer />
           </div>
 
         </Router>
