@@ -15,6 +15,7 @@ import Footer from "./components/Footer.jsx";
 import BgParticles from "./components/BgParticles.jsx";
 import OtpVerification from "./pages/OtpVerification.jsx";
 import Packages from './pages/Packages';
+import SiteStatus from "./components/SiteStatus.jsx";
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
@@ -30,16 +31,17 @@ const App = () => {
   }, []);
 
   return (
-    <GoogleOAuthProvider
-      clientId={GOOGLE_CLIENT_ID}
-      onScriptLoadError={() => {
-        console.error("Google Script Load Error");
-        setOauthError("Failed to load Google authentication");
-      }}
-      // onScriptLoadSuccess={() =>
-      //   ("Google Script Loaded Successfully")
-      // }
-    >
+    <SiteStatus>
+      <GoogleOAuthProvider
+        clientId={GOOGLE_CLIENT_ID}
+        onScriptLoadError={() => {
+          console.error("Google Script Load Error");
+          setOauthError("Failed to load Google authentication");
+        }}
+        // onScriptLoadSuccess={() =>
+        //   ("Google Script Loaded Successfully")
+        // }
+      >
       <AuthProvider setIsLoggedIn={setIsLoggedIn}>
         <Router>
           {oauthError && (
@@ -96,6 +98,7 @@ const App = () => {
         < LogoAnimation />
       </AuthProvider>
     </GoogleOAuthProvider>
+    </SiteStatus>
   );
 };
 
