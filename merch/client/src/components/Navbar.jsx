@@ -1,13 +1,16 @@
 import PropTypes from 'prop-types';
 import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { FiMenu, FiX, FiUser, FiUsers } from "react-icons/fi";
+import { useCart } from '../context/CartContext';
+import { FiMenu, FiX, FiUser, FiShoppingCart } from "react-icons/fi";
+import { Badge } from '@mui/material';
 import GlowButton from "./GlowButton";
 import samarthLogo from "../images/samarth_logo_white.png";
 
 export default function Navbar({ isLoggedIn, setIsLoggedIn }) {
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
+  const { getCartItemCount } = useCart();
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -52,13 +55,17 @@ export default function Navbar({ isLoggedIn, setIsLoggedIn }) {
             <Link to="/" className="block text-white hover:text-gray-300 transition py-2 md:py-0">Home</Link>
           </li>
           <li>
-            <Link to="/events" className="block text-white hover:text-gray-300 transition py-2 md:py-0">Events</Link>
+            <Link to="/products" className="block text-white hover:text-gray-300 transition py-2 md:py-0">Products</Link>
           </li>
-          
           <li>
-            <Link to="/profile" className="flex items-center justify-center text-white hover:text-gray-300 transition py-2 md:py-0">
-              <FiUser size={24} className="mr-2" />
-              Profile
+            <Link to="/orders" className="block text-white hover:text-gray-300 transition py-2 md:py-0">Orders</Link>
+          </li>
+          <li>
+            <Link to="/cart" className="flex items-center justify-center text-white hover:text-gray-300 transition py-2 md:py-0">
+              <Badge badgeContent={getCartItemCount()} color="secondary" className="mr-2">
+                <FiShoppingCart size={24} />
+              </Badge>
+              Cart
             </Link>
           </li>
 
