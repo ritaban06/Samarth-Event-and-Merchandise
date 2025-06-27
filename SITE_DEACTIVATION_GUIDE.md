@@ -25,33 +25,6 @@ VITE_MERCH_URL=https://merch.ritaban.me  # Redirect destination URL
 
 **Note:** Admin panel and backend do not require environment variables and remain always active.
 
-## Alternative: Runtime Control (Advanced)
-
-If you need instant deactivation without redeployment, you can implement a backend-controlled approach:
-
-### Option 1: API-Based Control
-Create an endpoint in your backend that returns the site status:
-```javascript
-// Backend endpoint
-app.get('/api/site-status', (req, res) => {
-  res.json({ 
-    active: process.env.SITE_ACTIVE !== 'false',
-    redirectUrl: process.env.MERCH_URL || 'https://merch.ritaban.me'
-  });
-});
-```
-
-Then modify `SiteStatus.jsx` to check this endpoint instead of environment variables.
-
-### Option 2: Database/Config Control
-Store the site status in your database or a configuration service, allowing real-time updates through your admin panel.
-
-**Trade-offs:**
-- ✅ Instant activation/deactivation
-- ❌ Requires backend dependency
-- ❌ More complex implementation
-- ❌ Additional API calls on every page load
-
 ## Deployment Instructions
 
 ### Important Note About Environment Variables
@@ -71,73 +44,55 @@ vercel login
 # Link your project (run once in your client directory)
 cd event/client
 vercel link
-
-# Deactivate the site
-vercel env add VITE_SITE_ACTIVE false
-vercel --prod
-
-# Reactivate the site
-vercel env rm VITE_SITE_ACTIVE
-vercel env add VITE_SITE_ACTIVE true
-vercel --prod
-
-# Check current environment variables
-vercel env ls
 ```
+
+**One-time setup complete!** Now you can easily deploy from VS Code terminal.
 
 ### To Deactivate the Events Client Site:
 
-1. **Update Environment Variables:**
-   - Set `VITE_SITE_ACTIVE=false` in your client deployment (Vercel/Netlify)
-   - Optionally set `VITE_MERCH_URL` to customize redirect destination
-   - **Admin and backend remain fully operational**
+1. **Edit Environment Variables Manually:**
+   - Open your `.env` file in VS Code
+   - Change `VITE_SITE_ACTIVE=true` to `VITE_SITE_ACTIVE=false`
+   - Save the file
 
-2. **For Vercel Deployment:**
+2. **Deploy from VS Code Terminal:**
    ```bash
-   # Set environment variables in Vercel dashboard or using CLI
-   vercel env add VITE_SITE_ACTIVE false
-   vercel env add VITE_MERCH_URL https://merch.ritaban.me
+   # Navigate to your client directory
+   cd event/client
    
-   # Redeploy client to apply changes
+   # Deploy to Vercel
    vercel --prod
    ```
 
-3. **For Netlify/Other Platforms:**
-   - Update environment variables in the platform dashboard
-   - The client will automatically redeploy
-
-### One-Command Scripts (Vercel)
-
-Create helper scripts in your `package.json` for easier management:
-
-```json
-{
-  "scripts": {
-    "deactivate-site": "vercel env add VITE_SITE_ACTIVE false && vercel --prod",
-    "activate-site": "vercel env add VITE_SITE_ACTIVE true && vercel --prod",
-    "check-site-status": "vercel env ls | grep VITE_SITE_ACTIVE"
-  }
-}
-```
-
-Then use:
+**Alternative - Set env via CLI:**
 ```bash
-# Deactivate
-npm run deactivate-site
-
-# Activate  
-npm run activate-site
-
-# Check status
-npm run check-site-status
+cd event/client
+vercel env add VITE_SITE_ACTIVE false
+vercel --prod
 ```
 
 ### To Reactivate the Events Client Site:
 
-1. **Update Environment Variable:**
-   - Set `VITE_SITE_ACTIVE=true` in your client deployment
+1. **Edit Environment Variables Manually:**
+   - Open your `.env` file in VS Code
+   - Change `VITE_SITE_ACTIVE=false` to `VITE_SITE_ACTIVE=true`
+   - Save the file
 
-2. **Redeploy** using the same process as above
+2. **Deploy from VS Code Terminal:**
+   ```bash
+   # Navigate to your client directory
+   cd event/client
+   
+   # Deploy to Vercel
+   vercel --prod
+   ```
+
+**Alternative - Set env via CLI:**
+```bash
+cd event/client
+vercel env add VITE_SITE_ACTIVE true
+vercel --prod
+```
 
 ## User Experience When Deactivated
 
@@ -175,10 +130,12 @@ Update the `REDIRECT_MESSAGE` constant in `SiteStatus.jsx` to customize the user
 
 ```
 event/
-├── client/src/components/SiteStatus.jsx          # Client maintenance component
-├── client/.env.example                           # Updated with VITE_SITE_ACTIVE and VITE_MERCH_URL
-├── admin/                                        # Admin panel (always active)
-└── backend/                                      # Backend API (always active)
+├── client/
+│   ├── src/components/SiteStatus.jsx         # Client maintenance component
+│   ├── .env                                  # Edit VITE_SITE_ACTIVE here
+│   └── .env.example                          # Template with VITE_SITE_ACTIVE and VITE_MERCH_URL
+├── admin/                                    # Admin panel (always active)
+└── backend/                                  # Backend API (always active)
 ```
 
 ## Testing
