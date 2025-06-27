@@ -1,4 +1,4 @@
-# Samarth-Event-and-Merchandise
+# Samarth-Event-and-Merch
 
 ### [Client Deployment](https://samarth-events.vercel.app) 
 
