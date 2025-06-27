@@ -197,7 +197,7 @@ router.post('/admin/login', async(req, res) => {
     const { username, password } = req.body;
 
     // Check if the username and password match the environment variables
-    if (username === process.env.VALID_PASS && password === process.env.INVALID) {
+    if (username === process.env.ADMIN_USERNAME && password === process.env.ADMIN_PASSWORD) {
         // Create a JWT token
         const token = await jwt.sign({ username }, process.env.JWTSECRET, { expiresIn: '1h' }); // 1 hour expiration
         return res.json({ token });
