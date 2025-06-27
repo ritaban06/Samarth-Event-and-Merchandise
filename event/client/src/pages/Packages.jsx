@@ -31,7 +31,7 @@ const Packages = () => {
           user ? axios.get(`${API_URL}/packages/datafetch`, { params: { id: user.uid } }) : Promise.resolve(null)
         ]);
         
-        setPackages(packagesResponse.data.packages);
+        setPackages(packagesResponse.data.packages || []);
         if (userPackageResponse) {
           setUserPackage(userPackageResponse.data.package);
         }
@@ -163,14 +163,20 @@ const Packages = () => {
   return (
     <>
     <div className="grid grid-cols-1 gap-8 max-w-7xl mx-auto">
-        {packages.map((pkg) => (
-          <PackageCard
-            key={pkg.id}
-            package={pkg}
-            onBuyClick={handleBuyClick}
-            userPackage={userPackage}
-          />
-        ))}
+        {Array.isArray(packages) && packages.length > 0 ? (
+          packages.map((pkg) => (
+            <PackageCard
+              key={pkg.id}
+              package={pkg}
+              onBuyClick={handleBuyClick}
+              userPackage={userPackage}
+            />
+          ))
+        ) : (
+          <div className="text-center text-gray-300">
+            <p>No packages available at the moment. Check back later!</p>
+          </div>
+        )}
       </div>
 
       {/* Payment Modal */}
@@ -220,4 +226,4 @@ const Packages = () => {
   );
 };
 
-export default Packages; 
+export default Packages;
