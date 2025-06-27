@@ -1,0 +1,13 @@
+{
+  "packages": [
+    {
+      "id": "basic_package",
+      "name": "Package",
+      "description": "Pick any 6 events at ₹ 200/- only\nPOC:\nArka: 73630 75644\nAnkit: 87970 77633\nPriyanshu: 62069 86620",
+      "price": 200,
+      "imageUrl": "https://drive.google.com/file/d/1q6d1qrVcgznNbVm9pXTCV8j-_u5annzx/view?usp=drive_link",
+      "limit": 6,
+      "rulebookUrl": "https://drive.google.com/file/d/18c15ASy-z0XcYwg6qx9848yMHT8pzj_M/view?usp=drive_link"
+    }
+  ] 
+} 

@@ -1,0 +1,24 @@
+.lsvg svg path {
+    fill: transparent;
+    stroke: #fff;
+    stroke-width: 3;
+    stroke-dasharray: 75;
+    stroke-dashoffset: 75;
+    animation: textAnimation 3s ease-in-out;
+  }
+  @keyframes textAnimation {
+    0% {
+      stroke-dashoffset: 50;
+    }
+    40% {
+      fill: transparent;
+    }
+    80% {
+      fill: #fff;
+      stroke-dashoffset: 0;
+    }
+    100% {
+      fill: #fff;
+      stroke-dashoffset: 0;
+    }
+  }

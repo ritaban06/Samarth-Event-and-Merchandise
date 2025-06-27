@@ -1,0 +1,15 @@
+@keyframes gradientMove {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 200% 50%; }
+  }
+  
+  .gradient-text {
+    display: inline-block;
+    background-image: linear-gradient(to right, #FFD700, #FFFFFF, #FFD700);
+    background-size: 200% auto;
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    animation: gradientMove 3s linear infinite;
+  }
+  

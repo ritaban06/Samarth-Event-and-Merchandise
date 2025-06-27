@@ -1,0 +1,31 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "license": "ISC",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon src/index.js",
+    "dev": "nodemon src/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9"
+  },
+  "dependencies": {
+    "axios": "^1.7.9",
+    "bcryptjs": "^3.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "express-validator": "^7.2.1",
+    "google-spreadsheet": "^3.3.0",
+    "googleapis": "^144.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "moment": "^2.30.1",
+    "mongoose": "^8.10.0",
+    "nodemailer": "^6.10.0",
+    "razorpay": "^2.9.6",
+    "yallist": "^5.0.0"
+  }
+}
