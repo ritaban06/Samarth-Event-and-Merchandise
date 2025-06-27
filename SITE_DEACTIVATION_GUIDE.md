@@ -25,7 +25,65 @@ VITE_MERCH_URL=https://merch.ritaban.me  # Redirect destination URL
 
 **Note:** Admin panel and backend do not require environment variables and remain always active.
 
+## Alternative: Runtime Control (Advanced)
+
+If you need instant deactivation without redeployment, you can implement a backend-controlled approach:
+
+### Option 1: API-Based Control
+Create an endpoint in your backend that returns the site status:
+```javascript
+// Backend endpoint
+app.get('/api/site-status', (req, res) => {
+  res.json({ 
+    active: process.env.SITE_ACTIVE !== 'false',
+    redirectUrl: process.env.MERCH_URL || 'https://merch.ritaban.me'
+  });
+});
+```
+
+Then modify `SiteStatus.jsx` to check this endpoint instead of environment variables.
+
+### Option 2: Database/Config Control
+Store the site status in your database or a configuration service, allowing real-time updates through your admin panel.
+
+**Trade-offs:**
+- ✅ Instant activation/deactivation
+- ❌ Requires backend dependency
+- ❌ More complex implementation
+- ❌ Additional API calls on every page load
+
 ## Deployment Instructions
+
+### Important Note About Environment Variables
+**Frontend environment variables (VITE_*) are build-time variables**, meaning they are compiled into the application during the build process. Therefore, changing them requires a rebuild and redeploy. This is different from backend environment variables which can be changed at runtime.
+
+### Quick CLI Management (Recommended)
+
+For **Vercel** deployments, you can manage environment variables directly from VS Code terminal:
+
+```bash
+# Install Vercel CLI (if not already installed)
+npm install -g vercel
+
+# Login to Vercel
+vercel login
+
+# Link your project (run once in your client directory)
+cd event/client
+vercel link
+
+# Deactivate the site
+vercel env add VITE_SITE_ACTIVE false
+vercel --prod
+
+# Reactivate the site
+vercel env rm VITE_SITE_ACTIVE
+vercel env add VITE_SITE_ACTIVE true
+vercel --prod
+
+# Check current environment variables
+vercel env ls
+```
 
 ### To Deactivate the Events Client Site:
 
@@ -47,6 +105,32 @@ VITE_MERCH_URL=https://merch.ritaban.me  # Redirect destination URL
 3. **For Netlify/Other Platforms:**
    - Update environment variables in the platform dashboard
    - The client will automatically redeploy
+
+### One-Command Scripts (Vercel)
+
+Create helper scripts in your `package.json` for easier management:
+
+```json
+{
+  "scripts": {
+    "deactivate-site": "vercel env add VITE_SITE_ACTIVE false && vercel --prod",
+    "activate-site": "vercel env add VITE_SITE_ACTIVE true && vercel --prod",
+    "check-site-status": "vercel env ls | grep VITE_SITE_ACTIVE"
+  }
+}
+```
+
+Then use:
+```bash
+# Deactivate
+npm run deactivate-site
+
+# Activate  
+npm run activate-site
+
+# Check status
+npm run check-site-status
+```
 
 ### To Reactivate the Events Client Site:
 
