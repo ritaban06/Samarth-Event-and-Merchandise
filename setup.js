@@ -16,7 +16,6 @@ const colors = {
   gray: (text) => `\x1b[90m${text}\x1b[0m`
 };
 
-// Simple prompt function (no external dependency)
 function prompt(question) {
   return new Promise((resolve) => {
     const readline = require('readline').createInterface({
