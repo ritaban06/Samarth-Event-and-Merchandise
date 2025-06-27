@@ -3,16 +3,17 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const { GoogleSpreadsheet } = require('google-spreadsheet');
-const eventRoutes = require('./routes/eventRoutes');
+const productRoutes = require('./routes/productRoutes');
+const orderRoutes = require('./routes/orderRoutes');
 const authRoutes = require('./routes/authRoutes');
-const adminRoutes = require('./routes/adminRoutes');
-const packageRoutes = require('./routes/packageRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Initialize Google Sheets
-const doc = new GoogleSpreadsheet(process.env.GOOGLE_SHEET_ID);
+// Initialize MongoDB connection
+mongoose.connect(process.env.MONGODB_URI)
+  .then(() => console.log('Connected to MongoDB'))
+  .catch(err => console.error('MongoDB Connection Error:', err));
 
 // Initialize Razorpay
 const Razorpay = require('razorpay');
@@ -45,10 +46,9 @@ mongoose.connect(process.env.MONGO_URI, {
 .catch(err => console.error('MongoDB Connection Error:', err));
 
 // Routes
-app.use('/api', eventRoutes);
-app.use('/api', authRoutes);
-app.use('/api', adminRoutes);
-app.use('/api/packages', packageRoutes);
+app.use('/api/products', productRoutes);
+app.use('/api/orders', orderRoutes);
+app.use('/api/auth', authRoutes);
 
 // Sample Route
 app.get('/', (req, res) => {
@@ -135,4 +135,4 @@ app.use((err, req, res, next) => {
 // Start Server
 app.listen(PORT, () => {
     console.log(`Server is running on https://samarth-event-page-backend.onrender.com`);
-}); 
+});
