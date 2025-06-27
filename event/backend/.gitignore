@@ -13,6 +13,7 @@ dist-ssr
 *.local
 package-lock.json
 .env
+.env.backend.event
 
 # Editor directories and files
 .vscode/*

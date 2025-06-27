@@ -1,5 +1,5 @@
 const nodemailer = require("nodemailer");
-require("dotenv").config(); // Load environment variables
+require("dotenv").config({ path: '.env.backend.event' }); // Load environment variables
 
 // Create a reusable transporter object using SMTP
 const transporter = nodemailer.createTransport({
