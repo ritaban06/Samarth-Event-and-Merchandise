@@ -603,11 +603,17 @@ const Events = () => {
         <div className="h-1 w-32 bg-yellow-400 rounded-full mb-6 justify-center items-center"></div>
       </header>
 
-      {events.length === 0 ? (
+      {loading ? (
+        <Loader />
+      ) : error ? (
+        <div className="text-center text-gray-300">
+          <p>{error}</p>
+        </div>
+      ) : events && events.length === 0 ? (
         <div className="text-center text-gray-300">
           <p>No events available at the moment. Check back later for more magical happenings!</p>
         </div>
-      ) : (
+      ) : events && Array.isArray(events) ? (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -622,7 +628,7 @@ const Events = () => {
             />
           ))}
         </motion.div>
-      )}
+      ) : null}
       <Dialog 
         open={openRegisterModal} 
         onClose={handleRegisterClose} 
