@@ -19,6 +19,8 @@ VITE_SITE_ACTIVE=true    # Site is active
 VITE_SITE_ACTIVE=false   # Site is deactivated (redirects to merch)
 # or
 VITE_SITE_ACTIVE=disabled # Site is deactivated (redirects to merch)
+
+VITE_MERCH_URL=https://merch.ritaban.me  # Redirect destination URL
 ```
 
 **Note:** Admin panel and backend do not require environment variables and remain always active.
@@ -27,14 +29,16 @@ VITE_SITE_ACTIVE=disabled # Site is deactivated (redirects to merch)
 
 ### To Deactivate the Events Client Site:
 
-1. **Update Environment Variable:**
+1. **Update Environment Variables:**
    - Set `VITE_SITE_ACTIVE=false` in your client deployment (Vercel/Netlify)
+   - Optionally set `VITE_MERCH_URL` to customize redirect destination
    - **Admin and backend remain fully operational**
 
 2. **For Vercel Deployment:**
    ```bash
-   # Set environment variable in Vercel dashboard or using CLI
+   # Set environment variables in Vercel dashboard or using CLI
    vercel env add VITE_SITE_ACTIVE false
+   vercel env add VITE_MERCH_URL https://merch.ritaban.me
    
    # Redeploy client to apply changes
    vercel --prod
@@ -56,7 +60,7 @@ VITE_SITE_ACTIVE=disabled # Site is deactivated (redirects to merch)
 ### Frontend (Client Site)
 - Shows a beautiful maintenance page with countdown timer
 - Displays message: "The events registration period has ended. You are being redirected to our merchandise store."
-- Automatically redirects to `https://merch.ritaban.me` after 3 seconds
+- Automatically redirects to the URL specified in `VITE_MERCH_URL` (defaults to `https://merch.ritaban.me`) after 3 seconds
 - Provides manual redirect button for immediate access
 
 ### Admin Panel
@@ -73,8 +77,9 @@ VITE_SITE_ACTIVE=disabled # Site is deactivated (redirects to merch)
 ## Customization
 
 ### Redirect URL
-To change the redirect destination, update the `MERCH_URL` constant in:
-- `event/client/src/components/SiteStatus.jsx`
+The redirect destination is controlled by the `VITE_MERCH_URL` environment variable. If not set, it defaults to `https://merch.ritaban.me`.
+
+```
 
 ### Redirect Messages
 Update the `REDIRECT_MESSAGE` constant in `SiteStatus.jsx` to customize the user message.
@@ -87,7 +92,7 @@ Update the `REDIRECT_MESSAGE` constant in `SiteStatus.jsx` to customize the user
 ```
 event/
 ├── client/src/components/SiteStatus.jsx          # Client maintenance component
-├── client/.env.example                           # Updated with VITE_SITE_ACTIVE
+├── client/.env.example                           # Updated with VITE_SITE_ACTIVE and VITE_MERCH_URL
 ├── admin/                                        # Admin panel (always active)
 └── backend/                                      # Backend API (always active)
 ```
@@ -95,9 +100,10 @@ event/
 ## Testing
 
 ### Local Testing
-1. Set environment variable in your client `.env` file:
+1. Set environment variables in your client `.env` file:
    ```bash
    VITE_SITE_ACTIVE=false
+   VITE_MERCH_URL=http://localhost:3002  # Or your local merch site
    ```
 
 2. Start your development servers:
@@ -116,7 +122,11 @@ event/
 4. Admin and backend remain accessible and functional
 
 ### Production Testing
-1. Deploy with deactivated environment variable for client only
+1. Deploy with deactivated environment variables for client only:
+   ```bash
+   VITE_SITE_ACTIVE=false
+   VITE_MERCH_URL=https://merch.ritaban.me
+   ```
 2. Test that client routes redirect properly
 3. Verify admin panel remains fully accessible
 4. Check that backend API endpoints remain functional
@@ -132,6 +142,8 @@ event/
 - **Easy Management**: Simple environment variable toggle for client only
 - **Reversible**: Client can be reactivated instantly
 - **Operational Continuity**: Business operations continue via admin panel
+- **Flexible Redirect**: Configurable redirect destination via environment variables
+- **Environment Support**: Different redirect URLs for dev/staging/production
 
 ## Monitoring
 
