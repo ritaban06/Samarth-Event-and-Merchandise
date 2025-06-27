@@ -1,0 +1,6 @@
+{
+  "scripts": {
+    "dev:event": "pnpm -r --filter \"event/*\" run dev",
+    "dev:merch": "pnpm -r --filter \"merch/*\" run dev"
+  }
+}
