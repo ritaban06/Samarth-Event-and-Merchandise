@@ -1,6 +1,11 @@
 packages:
-  - 'event/*'
-  - 'merch/*'
+  - 'event/admin'
+  - 'event/backend'
+  - 'event/client'
+  - 'merch/admin'
+  - 'merch/backend'
+  - 'merch/client'
+
 
 onlyBuiltDependencies:
   - esbuild
