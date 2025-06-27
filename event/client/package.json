@@ -24,6 +24,7 @@
     "google-spreadsheet": "^4.1.4",
     "lucide-react": "^0.476.0",
     "mongoose": "^8.10.2",
+    "prop-types": "^15.8.1",
     "razorpay": "^2.9.6",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

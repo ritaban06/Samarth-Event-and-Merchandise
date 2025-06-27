@@ -180,6 +180,9 @@ importers:
       mongoose:
         specifier: ^8.10.2
         version: 8.16.1
+      prop-types:
+        specifier: ^15.8.1
+        version: 15.8.1
       razorpay:
         specifier: ^2.9.6
         version: 2.9.6
