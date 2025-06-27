@@ -6,7 +6,6 @@ import Dashboard from './pages/Dashboard'
 import Layout from './components/Layout'
 import theme from './theme'
 import Events from './pages/Events'
-import AdminSiteStatus from './components/AdminSiteStatus'
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -20,10 +19,9 @@ function App() {
   }, [])
 
   return (
-    <AdminSiteStatus>
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <BrowserRouter>
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <BrowserRouter>
         <Routes>
           <Route 
             path="/login" 
@@ -47,7 +45,6 @@ function App() {
         </Routes>
       </BrowserRouter>
     </ThemeProvider>
-    </AdminSiteStatus>
   )
 }
 

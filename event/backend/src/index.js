@@ -7,7 +7,6 @@ const eventRoutes = require('./routes/eventRoutes');
 const authRoutes = require('./routes/authRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const packageRoutes = require('./routes/packageRoutes');
-const siteStatusMiddleware = require('./middleware/siteStatusMiddleware');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -46,9 +45,9 @@ mongoose.connect(process.env.MONGO_URI, {
 .catch(err => console.error('MongoDB Connection Error:', err));
 
 // Routes
-app.use('/api', siteStatusMiddleware, eventRoutes);
-app.use('/api', siteStatusMiddleware, authRoutes);
-app.use('/api', siteStatusMiddleware, adminRoutes);
+app.use('/api', eventRoutes);
+app.use('/api', authRoutes);
+app.use('/api', adminRoutes);
 app.use('/api/packages', packageRoutes);
 
 // Sample Route
