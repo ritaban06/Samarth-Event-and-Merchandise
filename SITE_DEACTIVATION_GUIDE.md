@@ -1,16 +1,17 @@
 # Site Deactivation System
 
-This system allows you to deactivate the events site and redirect users to the merchandise site without having to undeploy the application.
+This system allows you to deactivate the **events client site** and redirect users to the merchandise site without having to undeploy the application.
 
 ## How It Works
 
-The system uses environment variables to control the active status of the events site:
+The system uses environment variables to control the active status of the events client site:
 - When active: Normal site functionality
 - When deactivated: Shows a maintenance message and redirects to the merch site
+- **Admin panel and backend API remain fully functional** for management purposes
 
 ## Environment Variables
 
-### For Client (Frontend)
+### For Client (Frontend) Only
 Add to your `.env` file:
 ```bash
 VITE_SITE_ACTIVE=true    # Site is active
@@ -20,43 +21,33 @@ VITE_SITE_ACTIVE=false   # Site is deactivated (redirects to merch)
 VITE_SITE_ACTIVE=disabled # Site is deactivated (redirects to merch)
 ```
 
-### For Backend (API)
-Add to your `.env` file:
-```bash
-SITE_ACTIVE=true    # API is active
-# or
-SITE_ACTIVE=false   # API returns maintenance response
-# or
-SITE_ACTIVE=disabled # API returns maintenance response
-```
+**Note:** Admin panel and backend do not require environment variables and remain always active.
 
 ## Deployment Instructions
 
-### To Deactivate the Events Site:
+### To Deactivate the Events Client Site:
 
-1. **Update Environment Variables:**
+1. **Update Environment Variable:**
    - Set `VITE_SITE_ACTIVE=false` in your client deployment (Vercel/Netlify)
-   - Set `SITE_ACTIVE=false` in your backend deployment (Vercel/Render/Railway)
+   - **Admin and backend remain fully operational**
 
 2. **For Vercel Deployment:**
    ```bash
-   # Set environment variables in Vercel dashboard or using CLI
+   # Set environment variable in Vercel dashboard or using CLI
    vercel env add VITE_SITE_ACTIVE false
-   vercel env add SITE_ACTIVE false
    
-   # Redeploy to apply changes
+   # Redeploy client to apply changes
    vercel --prod
    ```
 
-3. **For Render/Railway:**
-   - Update environment variables in the dashboard
-   - The service will automatically redeploy
+3. **For Netlify/Other Platforms:**
+   - Update environment variables in the platform dashboard
+   - The client will automatically redeploy
 
-### To Reactivate the Events Site:
+### To Reactivate the Events Client Site:
 
-1. **Update Environment Variables:**
+1. **Update Environment Variable:**
    - Set `VITE_SITE_ACTIVE=true` in your client deployment
-   - Set `SITE_ACTIVE=true` in your backend deployment
 
 2. **Redeploy** using the same process as above
 
@@ -69,93 +60,86 @@ SITE_ACTIVE=disabled # API returns maintenance response
 - Provides manual redirect button for immediate access
 
 ### Admin Panel
-- Shows admin-specific maintenance page
-- Displays message: "The events administration period has ended. You are being redirected to our merchandise store."
-- Automatically redirects after 5 seconds (longer for admin review)
-- Uses Material-UI components for consistent admin styling
+- **Remains fully functional** - No deactivation or redirect
+- Admins can continue to manage events, view registrations, and access all features
+- Always accessible at the admin URL
 
 ### Backend API
-- Returns HTTP 503 (Service Unavailable) status
-- Provides JSON response with redirect information:
-  ```json
-  {
-    "success": false,
-    "message": "Events site is temporarily unavailable. Redirecting to merchandise store.",
-    "redirectUrl": "https://merch.ritaban.me",
-    "status": "maintenance"
-  }
-  ```
+- **Remains fully operational** - No maintenance mode
+- All endpoints continue to function normally
+- Admin panel can continue to make API calls
+- Data management and operations remain uninterrupted
 
 ## Customization
 
 ### Redirect URL
 To change the redirect destination, update the `MERCH_URL` constant in:
 - `event/client/src/components/SiteStatus.jsx`
-- `event/admin/src/components/AdminSiteStatus.jsx`
 
 ### Redirect Messages
-Update the `REDIRECT_MESSAGE` constant in the same files to customize the user message.
+Update the `REDIRECT_MESSAGE` constant in `SiteStatus.jsx` to customize the user message.
 
 ### Timer Duration
 - Client redirect: 3 seconds (modify in `SiteStatus.jsx`)
-- Admin redirect: 5 seconds (modify in `AdminSiteStatus.jsx`)
 
 ## File Structure
 
 ```
 event/
 ├── client/src/components/SiteStatus.jsx          # Client maintenance component
-├── admin/src/components/AdminSiteStatus.jsx      # Admin maintenance component
-├── backend/src/middleware/siteStatusMiddleware.js # API maintenance middleware
 ├── client/.env.example                           # Updated with VITE_SITE_ACTIVE
-├── admin/.env.example                            # Updated with VITE_SITE_ACTIVE
-└── backend/.env.example                          # Updated with SITE_ACTIVE
+├── admin/                                        # Admin panel (always active)
+└── backend/                                      # Backend API (always active)
 ```
 
 ## Testing
 
 ### Local Testing
-1. Set environment variables in your `.env` files:
+1. Set environment variable in your client `.env` file:
    ```bash
    VITE_SITE_ACTIVE=false
-   SITE_ACTIVE=false
    ```
 
 2. Start your development servers:
    ```bash
-   # Client
+   # Client (will show maintenance page)
    cd event/client && npm run dev
    
-   # Admin
+   # Admin (remains fully functional)
    cd event/admin && npm run dev
    
-   # Backend
+   # Backend (remains fully functional)
    cd event/backend && npm run dev
    ```
 
-3. Visit the sites to see the maintenance pages
+3. Visit the client site to see the maintenance page
+4. Admin and backend remain accessible and functional
 
 ### Production Testing
-1. Deploy with deactivated environment variables
-2. Test that all routes redirect properly
-3. Verify API endpoints return maintenance responses
-4. Check that the merch site remains accessible
+1. Deploy with deactivated environment variable for client only
+2. Test that client routes redirect properly
+3. Verify admin panel remains fully accessible
+4. Check that backend API endpoints remain functional
+5. Verify that the merch site remains accessible
 
 ## Benefits
 
-- **No Downtime**: Site remains deployed and accessible
-- **SEO Friendly**: Returns proper HTTP status codes
-- **User Experience**: Clear messaging and automatic redirection
-- **Easy Management**: Simple environment variable toggle
-- **Reversible**: Can be reactivated instantly
-- **API Safety**: Backend also respects the deactivation status
+- **No Downtime**: Client site remains deployed but shows maintenance message
+- **Admin Access**: Admin panel remains fully functional for management
+- **API Continuity**: Backend continues to serve admin operations
+- **SEO Friendly**: Returns proper HTTP status codes for the client
+- **User Experience**: Clear messaging and automatic redirection for users
+- **Easy Management**: Simple environment variable toggle for client only
+- **Reversible**: Client can be reactivated instantly
+- **Operational Continuity**: Business operations continue via admin panel
 
 ## Monitoring
 
-When deactivated, you can monitor:
-- Redirect success rates
+When client is deactivated, you can monitor:
+- Client redirect success rates
 - User engagement with the maintenance message
 - Traffic patterns to the merch site
-- API requests that hit the maintenance middleware
+- Admin usage patterns (which remain unaffected)
+- Backend API usage from admin operations
 
-This system provides a professional and user-friendly way to manage the lifecycle of your events site while maintaining a seamless experience for your users.
+This simplified system provides a professional way to manage the client-facing events site while keeping administrative and operational capabilities fully intact.
