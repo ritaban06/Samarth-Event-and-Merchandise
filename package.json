@@ -1,5 +1,6 @@
 {
   "scripts": {
+    "setup": "node setup.js",
     "dev:event": "pnpm -r --filter \"event-*\" run --if-present dev",
     "dev:merch": "pnpm -r --filter \"merch-*\" run --if-present dev"
   }
