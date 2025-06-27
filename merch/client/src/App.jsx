@@ -8,6 +8,7 @@ import Register from "./pages/Register";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { useState, useEffect } from "react";
 import { AuthProvider } from "./context/AuthContext.jsx";
+import { CartProvider } from "./context/CartContext.jsx";
 import Profile from "./pages/Profile";
 import Teams from "./pages/teams.jsx";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -15,6 +16,9 @@ import Footer from "./components/Footer.jsx";
 import BgParticles from "./components/BgParticles.jsx";
 import OtpVerification from "./pages/OtpVerification.jsx";
 import Packages from './pages/Packages';
+import Products from './pages/Products';
+import Cart from './pages/Cart';
+import Orders from './pages/Orders';
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
@@ -41,10 +45,11 @@ const App = () => {
       // }
     >
       <AuthProvider setIsLoggedIn={setIsLoggedIn}>
-        <Router>
-          {oauthError && (
-            <div className="bg-red-100 text-red-700 p-4">{oauthError}</div>
-          )}
+        <CartProvider>
+          <Router>
+            {oauthError && (
+              <div className="bg-red-100 text-red-700 p-4">{oauthError}</div>
+            )}
 
           <div className="min-h-screen bg-[#0a1929] text-white flex flex-col">
             <Navbar isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} />
@@ -61,8 +66,9 @@ const App = () => {
             <Footer />
           </div>
 
-        </Router>
-        < LogoAnimation />
+          </Router>
+          < LogoAnimation />
+        </CartProvider>
       </AuthProvider>
     </GoogleOAuthProvider>
   );
