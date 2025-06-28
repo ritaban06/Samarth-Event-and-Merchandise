@@ -284,4 +284,110 @@ router.get('/clients/all', async (req, res) => {
       }
 })
 
+// Admin login endpoint
+router.post("/admin/login", [
+    body('username', 'Username is required').notEmpty(),
+    body('password', 'Password is required').notEmpty()
+], async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ 
+            success: false,
+            errors: errors.array()[0].msg 
+        });
+    }
+
+    try {
+        const { username, password } = req.body;
+        
+        // Check admin credentials (you can modify this logic)
+        const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
+        const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
+        
+        if (username !== ADMIN_USERNAME || password !== ADMIN_PASSWORD) {
+            return res.status(401).json({ 
+                success: false,
+                message: "Invalid admin credentials" 
+            });
+        }
+
+        // Create admin token
+        const payload = {
+            user: {
+                id: 'admin',
+                username: username,
+                isAdmin: true
+            }
+        };
+
+        const token = jwt.sign(payload, AUTHENTICATED_SIGNATURE || 'fallback_secret', {
+            expiresIn: '24h'
+        });
+
+        res.status(200).json({ 
+            success: true,
+            token,
+            user: {
+                id: 'admin',
+                username: username,
+                isAdmin: true
+            },
+            message: 'Admin login successful'
+        });
+
+    } catch (error) {
+        console.error('Admin Login Error:', error);
+        res.status(500).json({ 
+            success: false,
+            message: "Admin login failed", 
+            error: error.message 
+        });
+    }
+});
+
+// Admin token verification endpoint
+router.post("/admin/verify", async (req, res) => {
+    try {
+        const authHeader = req.headers['authorization'];
+        const token = authHeader && authHeader.split(' ')[1];
+        
+        if (!token) {
+            return res.status(401).json({ 
+                success: false,
+                message: 'Access token required' 
+            });
+        }
+
+        jwt.verify(token, AUTHENTICATED_SIGNATURE || 'fallback_secret', (err, user) => {
+            if (err) {
+                return res.status(403).json({ 
+                    success: false,
+                    message: 'Invalid or expired token' 
+                });
+            }
+            
+            if (!user.user.isAdmin) {
+                return res.status(403).json({ 
+                    success: false,
+                    message: 'Admin access required' 
+                });
+            }
+
+            res.status(200).json({
+                success: true,
+                user: user.user,
+                message: 'Token is valid'
+            });
+        });
+
+    } catch (error) {
+        console.error('Admin Verify Error:', error);
+        res.status(500).json({ 
+            success: false,
+            message: "Token verification failed", 
+            error: error.message 
+        });
+    }
+});
+
 module.exports = router;
