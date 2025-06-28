@@ -44,15 +44,6 @@ const categories = [
   },
 ];
 
-// Footer component placeholder - replace with your actual Footer component
-const Footer = () => (
-  <footer className="bg-[#0a1929] py-8 px-4 border-t border-purple-500/30">
-    <div className="max-w-7xl mx-auto text-center text-gray-400">
-      <p>&copy; 2025 Samarth. All rights reserved.</p>
-    </div>
-  </footer>
-);
-
 const SafalyaHomePage = () => {
   return (
     <>
@@ -92,23 +83,23 @@ const SafalyaHomePage = () => {
 
         {/* Hero Section - Safalya */}
         <header className="relative min-h-screen h-max flex items-center justify-center overflow-hidden px-6">
-          <div className="absolute inset-0 bg-[url('/api/placeholder/1920/1080')] bg-cover bg-center opacity-10"></div>
-          <div className="absolute inset-0"></div>
+          {/* <div className="absolute inset-0 bg-[url('/api/placeholder/1920/1080')] bg-cover bg-center opacity-10"></div>
+          <div className="absolute inset-0"></div> */}
 
           <div className="relative z-10 text-center max-w-4xl mx-auto">
             <h1 className="text-5xl md:text-7xl font-extrabold mb-6 tracking-tight">
-              <span className="bg-gradient-to-r from-yellow-300 to-purple-300 bg-clip-text text-transparent">SAFALYA</span>
-              <span className="text-2xl md:text-3xl font-light block mt-2 text-white">The Annual Educational Fest of TMSL</span>
+              <span className="bg-gradient-to-r from-yellow-300 to-purple-300 bg-clip-text text-transparent"></span>
+              <span className="text-2xl md:text-3xl font-light block mt-2 text-white">The Merch of TMSL</span>
             </h1>
 
             <p className="text-xl md:text-2xl mb-8 text-purple-100 max-w-3xl mx-auto font-light leading-relaxed">
-              The largest educational fest of Eastern India. A magical celebration of resilience, talent, and the unwavering pursuit of success.
+              {/* The largest educational fest of Eastern India. A magical celebration of resilience, talent, and the unwavering pursuit of success. */}
             </p>
 
             <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-8 mb-12">
               <div className="flex items-center space-x-2 text-yellow-300">
                 <FiCalendar className="h-5 w-5" />
-                <span className="text-lg">March 19-21, 2025</span>
+                <span className="text-lg">All Business Days</span>
               </div>
               <div className="hidden md:block h-4 w-px bg-purple-500/50"></div>
               <div className="flex items-center space-x-2 text-yellow-300">
@@ -119,7 +110,7 @@ const SafalyaHomePage = () => {
 
             <Link to="/events">
               <button className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-black font-bold rounded-full px-8 py-4 text-lg transition-all duration-500 hover:shadow-lg hover:shadow-yellow-500/30 hover:scale-105 group">
-                EXPLORE EVENTS
+                EXPLORE MERCH
                 <FiChevronRight className="inline ml-2 group-hover:translate-x-1 transition-transform duration-300" />
               </button>
             </Link>
@@ -227,7 +218,7 @@ const SafalyaHomePage = () => {
         </section>
 
         {/* CTA Section */}
-        <section className="py-20 px-6">
+        {/* <section className="py-20 px-6">
           <div className="max-w-4xl mx-auto bg-gradient-to-br from-purple-800/30 to-purple-900/30 backdrop-blur-md rounded-2xl overflow-hidden border border-purple-500/30 relative">
             <div className="absolute inset-0 bg-[url('/api/placeholder/1200/400')] bg-cover bg-center opacity-10"></div>
             <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-yellow-500/10 to-purple-800/30"></div>
@@ -242,7 +233,7 @@ const SafalyaHomePage = () => {
               <div className="flex flex-col md:flex-row gap-4 justify-center">
                 <Link to="/login">
                   <button className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-black font-bold rounded-full px-8 py-4 text-lg transition-all duration-500 hover:shadow-lg hover:shadow-yellow-500/30 hover:scale-105">
-                    Register Now
+                     Register Now
                   </button>
                 </Link>
                 <a href="https://www.samarthtmsl.xyz/contact">
@@ -253,9 +244,8 @@ const SafalyaHomePage = () => {
               </div>
             </div>
           </div>
-        </section>
+        </section> */}
       </div>
-      <Footer />
     </>
   );
 };
