@@ -98,7 +98,7 @@ function Login({ setIsAuthenticated }) {
             color: 'primary.main'
           }}
         >
-          Welcome to Event Management
+          Welcome to Merchandise Management
         </Typography>
         <Typography
           variant="h6"

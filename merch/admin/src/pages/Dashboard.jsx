@@ -13,8 +13,6 @@ import {
   CardContent,
   Grid,
   Chip,
-  IconButton,
-  Tooltip,
   TextField,
   InputAdornment,
   Select,
@@ -22,19 +20,22 @@ import {
   FormControl,
   TablePagination,
   Snackbar,
-  Button
+  Button,
+  Alert
 } from '@mui/material'
 import SearchIcon from '@mui/icons-material/Search'
 import RefreshIcon from '@mui/icons-material/Refresh'
-import SyncIcon from '@mui/icons-material/Sync'
 import CloudUploadIcon from '@mui/icons-material/CloudUpload'
+import ShoppingCartIcon from '@mui/icons-material/ShoppingCart'
+import InventoryIcon from '@mui/icons-material/Inventory'
 import axios from 'axios'
 import { formatDateTime } from '../utils/dateFormat'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 
 export default function Dashboard() {
-  const [events, setEvents] = useState([])
+  const [orders, setOrders] = useState([])
+  const [products, setProducts] = useState([])
   const [currentTime, setCurrentTime] = useState(new Date())
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -43,107 +44,123 @@ export default function Dashboard() {
   const [rowsPerPage] = useState(10)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [isSyncing, setIsSyncing] = useState(false)
-  const [snackbar, setSnackbar] = useState(null)
-  const [paymentStatusFilter, setPaymentStatusFilter] = useState('All')
-  const [packages, setPackages] = useState([])
-  const [viewMode, setViewMode] = useState('events') // 'events' or 'packages'
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'info' })
+  const [orderStatusFilter, setOrderStatusFilter] = useState('All')
+  const [viewMode, setViewMode] = useState('orders') // 'orders' or 'products'
 
   useEffect(() => {
-    fetchEvents()
-    fetchPackages()
+    fetchOrders()
+    fetchProducts()
     
     const timeInterval = setInterval(() => {
       setCurrentTime(new Date())
     }, 1000)
 
     return () => clearInterval(timeInterval)
-  }, []) // Remove fetchEvents from dependency array to avoid multiple calls
+  }, [])
 
-  const fetchEvents = async () => {
+  const fetchOrders = async () => {
     try {
       setLoading(true)
-      const response = await axios.get(`${API_URL}/events`, {
+      const response = await axios.get(`${API_URL}/orders`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
         }
       })
-      setEvents(response.data)
+      setOrders(response.data || [])
       setError(null)
     } catch (error) {
-      console.error('Error fetching events:', error)
-      setError('Coming Soon !')
+      console.error('Error fetching orders:', error)
+      setError('Failed to load orders. Using demo data.')
+      // Demo data for development
+      setOrders([
+        {
+          _id: '1',
+          customerName: 'John Doe',
+          customerEmail: 'john@example.com',
+          productName: 'College T-Shirt',
+          size: 'M',
+          quantity: 2,
+          amount: 599,
+          status: 'pending',
+          createdAt: new Date().toISOString()
+        },
+        {
+          _id: '2',
+          customerName: 'Jane Smith',
+          customerEmail: 'jane@example.com',
+          productName: 'College Hoodie',
+          size: 'L',
+          quantity: 1,
+          amount: 899,
+          status: 'paid',
+          createdAt: new Date().toISOString()
+        }
+      ])
     } finally {
       setLoading(false)
     }
   }
 
-  // Add this after fetchEvents function
-  const fetchPackages = async () => {
+  const fetchProducts = async () => {
     try {
-      setLoading(true)
-      const response = await axios.get(`${API_URL}/clients/all`)
-      // Filter and transform clients with package registrations
-      const packageRegistrations = response.data
-        .filter(client => client.package.status==='active') // Only get clients with package data
-        .map(client => ({
-          _id: client._id,
-          userId: client.uid,
-          userName: client.userName,
-          email: client.email,
-          paymentType: client.package.payment.type,
-          paymentId: client.package.payment.payment_id? client.package.payment.payment_id: null,
-          registeredEvents: client.package.registered,
-          paymentStatus: client.package.payment.status
-        }))
-      setPackages(packageRegistrations)
-      setError(null)
+      const response = await axios.get(`${API_URL}/products`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+        }
+      })
+      setProducts(response.data || [])
     } catch (error) {
-      console.error('Error fetching package registrations:', error)
-      setError('Failed to load package registrations')
-    } finally {
-      setLoading(false)
+      console.error('Error fetching products:', error)
+      // Demo data for development
+      setProducts([
+        {
+          _id: '1',
+          name: 'College T-Shirt',
+          category: 'Apparel',
+          price: 299,
+          stock: 50,
+          status: 'active',
+          createdAt: new Date().toISOString()
+        },
+        {
+          _id: '2',
+          name: 'College Hoodie',
+          category: 'Apparel',
+          price: 899,
+          stock: 25,
+          status: 'active',
+          createdAt: new Date().toISOString()
+        }
+      ])
     }
   }
-
-  // Get all registrations from all events
-  const getAllRegistrations = () => {
-    
-    
-    const registrations = events.flatMap(event => 
-      event.participants.map(participant => ({
-        ...participant,
-        eventName: event.eventName,
-        registrationDate: participant.payment.date,
-        eventId: event._id
-      }))
-    )
-    return registrations
-  }
-
-  const filteredRegistrations = getAllRegistrations().filter(reg => {
-    const matchesSearchTerm = reg.uid?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      reg.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      reg.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      reg.eventName?.toLowerCase().includes(searchTerm.toLowerCase());
-
-    const matchesPaymentStatus = paymentStatusFilter === 'All' || 
-      reg.payment?.status === paymentStatusFilter.toLowerCase();
-
-    return matchesSearchTerm && matchesPaymentStatus;
-  })
 
   // Calculate statistics
-  const totalRegistrations = getAllRegistrations().length
-  const totalPaidRegistrations = getAllRegistrations().filter(reg => reg.payment?.status === 'paid').length
-  const totalPendingRegistrations = getAllRegistrations().filter(reg => reg.payment?.status === 'pending').length
-  const totalUnpaidRegistrations = getAllRegistrations().filter(reg => reg.payment?.status === 'unpaid').length
-  const totalFreeRegistrations = getAllRegistrations().filter(reg => reg.payment?.status === 'free').length
+  const totalOrders = orders.length
+  const totalPaidOrders = orders.filter(order => order.status === 'paid').length
+  const totalPendingOrders = orders.filter(order => order.status === 'pending').length
+  const totalShippedOrders = orders.filter(order => order.status === 'shipped').length
+  const totalProducts = products.length
+  const totalRevenue = orders.filter(order => order.status === 'paid').reduce((sum, order) => sum + (order.amount || 0), 0)
+
+  const filteredOrders = orders.filter(order => {
+    const matchesSearchTerm = order.customerName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.customerEmail?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.productName?.toLowerCase().includes(searchTerm.toLowerCase())
+
+    const matchesStatus = orderStatusFilter === 'All' || 
+      order.status === orderStatusFilter.toLowerCase()
+
+    return matchesSearchTerm && matchesStatus
+  })
 
   // Refresh data from database
   const handleRefresh = async () => {
     setIsRefreshing(true)
     try {
-      await fetchEvents()
+      await fetchOrders()
+      await fetchProducts()
       setSnackbar({
         open: true,
         message: 'Data refreshed successfully!',
@@ -166,7 +183,7 @@ export default function Dashboard() {
     try {
       const response = await axios.post(
         `${API_URL}/admin/sync-sheets`,
-        { registrations: getAllRegistrations() },
+        { orders: orders },
         {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
@@ -189,93 +206,37 @@ export default function Dashboard() {
     }
   }
 
-  const handlePaymentStatusChange = async (registrationId, newStatus, eventId, paymentType) => {
+  const handleOrderStatusChange = async (orderId, newStatus) => {
     try {
-      setSnackbar({ open: true, message: 'Updating payment status...', severity: 'info' });
+      setSnackbar({ open: true, message: 'Updating order status...', severity: 'info' })
       
-      const paymentData = {
-        status: newStatus,
-        eventId: eventId,
-        uid: registrationId,
-        paymentType: paymentType,
-      };
-
       const response = await axios.put(
-        `${API_URL}/admin/registration/${registrationId}/payment-status`,
-        paymentData,
+        `${API_URL}/orders/${orderId}/status`,
+        { status: newStatus },
         {
           headers: { Authorization: `Bearer ${localStorage.getItem('adminToken')}` }
         }
-      );
-
-      // Update local state for the specific event and participant
-      setEvents(prevEvents => 
-        prevEvents.map(event => {
-          if (event._id === eventId) {
-            return {
-              ...event,
-              participants: event.participants.map(participant => 
-                participant.uid === registrationId
-                  ? { 
-                      ...participant, 
-                      payment: { 
-                        ...participant.payment, 
-                        status: newStatus.toLowerCase(),
-                        paymentDate : paymentType === 'cash' ? new Date().toISOString() : participant.payment.date
-                      } 
-                    }
-                  : participant
-              )
-            };
-          }
-          return event;
-        })
-      );
-
-      setSnackbar({
-        open: true,
-        message: 'Payment status updated successfully',
-        severity: 'success'
-      });
-    } catch (error) {
-      console.error('Error updating payment status:', error);
-      setSnackbar({
-        open: true,
-        message: error.response?.data?.message || 'Failed to update payment status',
-        severity: 'error'
-      });
-    }
-  };
-
-  // Add this after handlePaymentStatusChange function
-  const handlePackagePaymentUpdate = async (clientId, newStatus) => {
-    try {
-      setSnackbar({ open: true, message: 'Updating package payment status...', severity: 'info' })
-      
-      const response = await axios.put(
-        `${API_URL}/packages/clients/${clientId}/package-status`,
-        { status: newStatus },
       )
-      
+
       // Update local state
-      setPackages(prevPackages => 
-        prevPackages.map(pkg => 
-          pkg._id === clientId
-            ? { ...pkg, paymentStatus: newStatus }
-            : pkg
+      setOrders(prevOrders => 
+        prevOrders.map(order => 
+          order._id === orderId
+            ? { ...order, status: newStatus }
+            : order
         )
       )
 
       setSnackbar({
         open: true,
-        message: 'Package payment status updated successfully',
+        message: 'Order status updated successfully',
         severity: 'success'
       })
     } catch (error) {
-      console.error('Error updating package payment status:', error)
+      console.error('Error updating order status:', error)
       setSnackbar({
         open: true,
-        message: error.response?.data?.message || 'Failed to update package payment status',
+        message: error.response?.data?.message || 'Failed to update order status',
         severity: 'error'
       })
     }
@@ -284,15 +245,7 @@ export default function Dashboard() {
   if (loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-        <Typography variant="h6">Loading...</Typography>
-      </Box>
-    )
-  }
-
-  if (error) {
-    return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-        <Typography variant="h6" color="error">{error}</Typography>
+        <Typography variant="h6">Loading merchandise data...</Typography>
       </Box>
     )
   }
@@ -311,7 +264,9 @@ export default function Dashboard() {
         mb: 4,
         display: 'flex',
         justifyContent: 'space-between',
-        alignItems: 'center'
+        alignItems: 'center',
+        flexWrap: 'wrap',
+        gap: 2
       }}>
         <Typography 
           variant="h4" 
@@ -322,21 +277,23 @@ export default function Dashboard() {
             mb: 3
           }}
         >
-          Registration Dashboard
+          Merchandise Dashboard
         </Typography>
         
-        <Box sx={{ display: 'flex', gap: 2 }}>
+        <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
           <FormControl variant="outlined" sx={{ minWidth: 120 }}>
             <Select
-              value={paymentStatusFilter}
-              onChange={(e) => setPaymentStatusFilter(e.target.value)}
+              value={orderStatusFilter}
+              onChange={(e) => setOrderStatusFilter(e.target.value)}
               displayEmpty
+              size="small"
             >
-              <MenuItem value="All">All</MenuItem>
-              <MenuItem value="Paid">Paid</MenuItem>
+              <MenuItem value="All">All Status</MenuItem>
               <MenuItem value="Pending">Pending</MenuItem>
-              <MenuItem value="Unpaid">Unpaid</MenuItem>
-              <MenuItem value="Free">Free</MenuItem>
+              <MenuItem value="Paid">Paid</MenuItem>
+              <MenuItem value="Shipped">Shipped</MenuItem>
+              <MenuItem value="Delivered">Delivered</MenuItem>
+              <MenuItem value="Cancelled">Cancelled</MenuItem>
             </Select>
           </FormControl>
 
@@ -345,12 +302,13 @@ export default function Dashboard() {
             startIcon={<RefreshIcon />}
             variant="contained"
             onClick={handleRefresh}
+            size="small"
             sx={{ 
               bgcolor: 'primary.main',
               '&:hover': { bgcolor: 'primary.dark' }
             }}
           >
-            {isRefreshing ? 'Refreshing...' : 'Refresh Data'}
+            {isRefreshing ? 'Refreshing...' : 'Refresh'}
           </Button>
           
           <Button
@@ -358,19 +316,27 @@ export default function Dashboard() {
             startIcon={<CloudUploadIcon />}
             variant="contained"
             onClick={handleSync}
+            size="small"
             sx={{ 
               bgcolor: 'secondary.main',
               '&:hover': { bgcolor: 'secondary.dark' }
             }}
           >
-            {isSyncing ? 'Syncing...' : 'Sync to Sheets'}
+            {isSyncing ? 'Syncing...' : 'Sync'}
           </Button>
         </Box>
       </Box>
 
+      {/* Error Alert */}
+      {error && (
+        <Alert severity="warning" sx={{ mb: 3 }}>
+          {error}
+        </Alert>
+      )}
+
       {/* Stats Cards */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid item xs={12} sm={6} md={2.4}>
           <Card 
             elevation={3}
             sx={{ 
@@ -383,16 +349,19 @@ export default function Dashboard() {
             }}
           >
             <CardContent>
-              <Typography variant="h6" color="text.secondary" gutterBottom>
-                Total Registrations
-              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                <ShoppingCartIcon color="primary" />
+                <Typography variant="h6" color="text.secondary" sx={{ ml: 1 }}>
+                  Total Orders
+                </Typography>
+              </Box>
               <Typography variant="h3" color="primary.main">
-                {totalRegistrations}
+                {totalOrders}
               </Typography>
             </CardContent>
           </Card>
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid item xs={12} sm={6} md={2.4}>
           <Card 
             elevation={3}
             sx={{ 
@@ -406,15 +375,15 @@ export default function Dashboard() {
           >
             <CardContent>
               <Typography variant="h6" color="text.secondary" gutterBottom>
-                Paid Registrations
+                Paid Orders
               </Typography>
               <Typography variant="h3" color="success.main">
-                {totalPaidRegistrations}
+                {totalPaidOrders}
               </Typography>
             </CardContent>
           </Card>
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid item xs={12} sm={6} md={2.4}>
           <Card 
             elevation={3}
             sx={{ 
@@ -428,15 +397,15 @@ export default function Dashboard() {
           >
             <CardContent>
               <Typography variant="h6" color="text.secondary" gutterBottom>
-                Pending Payments
+                Pending Orders
               </Typography>
               <Typography variant="h3" color="warning.main">
-                {totalPendingRegistrations}
+                {totalPendingOrders}
               </Typography>
             </CardContent>
           </Card>
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid item xs={12} sm={6} md={2.4}>
           <Card 
             elevation={3}
             sx={{ 
@@ -450,15 +419,15 @@ export default function Dashboard() {
           >
             <CardContent>
               <Typography variant="h6" color="text.secondary" gutterBottom>
-                Unpaid Registrations
+                Total Revenue
               </Typography>
-              <Typography variant="h3" color="error.main">
-                {totalUnpaidRegistrations}
+              <Typography variant="h3" color="success.main">
+                ₹{totalRevenue}
               </Typography>
             </CardContent>
           </Card>
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid item xs={12} sm={6} md={2.4}>
           <Card 
             elevation={3}
             sx={{ 
@@ -471,22 +440,25 @@ export default function Dashboard() {
             }}
           >
             <CardContent>
-              <Typography variant="h6" color="text.secondary" gutterBottom>
-                Free Registrations
-              </Typography>
-              <Typography variant="h3" sx={{ color: '#9c27b0' }}>
-                {totalFreeRegistrations}
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                <InventoryIcon color="info" />
+                <Typography variant="h6" color="text.secondary" sx={{ ml: 1 }}>
+                  Products
+                </Typography>
+              </Box>
+              <Typography variant="h3" color="info.main">
+                {totalProducts}
               </Typography>
             </CardContent>
           </Card>
         </Grid>
       </Grid>
 
-      {/* Updated Search Bar */}
+      {/* Search Bar */}
       <TextField
         fullWidth
         variant="outlined"
-        placeholder="Search by UID, name, email, or event..."
+        placeholder="Search by customer name, email, or product..."
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
         sx={{ mb: 3 }}
@@ -502,21 +474,23 @@ export default function Dashboard() {
       {/* View Mode Toggle */}
       <Box sx={{ mb: 3, display: 'flex', gap: 2 }}>
         <Button
-          variant={viewMode === 'events' ? 'contained' : 'outlined'}
-          onClick={() => setViewMode('events')}
+          variant={viewMode === 'orders' ? 'contained' : 'outlined'}
+          onClick={() => setViewMode('orders')}
+          startIcon={<ShoppingCartIcon />}
         >
-          Event Registrations
+          Orders ({totalOrders})
         </Button>
         <Button
-          variant={viewMode === 'packages' ? 'contained' : 'outlined'}
-          onClick={() => setViewMode('packages')}
+          variant={viewMode === 'products' ? 'contained' : 'outlined'}
+          onClick={() => setViewMode('products')}
+          startIcon={<InventoryIcon />}
         >
-          Package Registrations
+          Products ({totalProducts})
         </Button>
       </Box>
 
-      {/* Table Section */}
-      {viewMode === 'events' && (
+      {/* Orders Table */}
+      {viewMode === 'orders' && (
         <TableContainer 
           component={Paper}
           sx={{ 
@@ -530,138 +504,58 @@ export default function Dashboard() {
           <Table sx={{ minWidth: 650 }} stickyHeader>
             <TableHead>
               <TableRow>
-                <TableCell 
-                  sx={{ 
-                    fontWeight: 600,
-                    bgcolor: 'background.paper'
-                  }}
-                >
-                  UID
-                </TableCell>
-                <TableCell 
-                  sx={{ 
-                    fontWeight: 600,
-                    bgcolor: 'background.paper'
-                  }}
-                >
-                  Name
-                </TableCell>
-                <TableCell 
-                  sx={{ 
-                    fontWeight: 600,
-                    bgcolor: 'background.paper'
-                  }}
-                >
-                  Email
-                </TableCell>
-                <TableCell 
-                  sx={{ 
-                    fontWeight: 600,
-                    bgcolor: 'background.paper'
-                  }}
-                >
-                  Event Name
-                </TableCell>
-                <TableCell 
-                  sx={{ 
-                    fontWeight: 600,
-                    bgcolor: 'background.paper'
-                  }}
-                >
-                  Team Name & Role
-                </TableCell>
-                <TableCell 
-                  sx={{ 
-                    fontWeight: 600,
-                    bgcolor: 'background.paper'
-                  }}
-                >
-                  Registration Date
-                </TableCell>
-                <TableCell 
-                  sx={{ 
-                    fontWeight: 600,
-                    bgcolor: 'background.paper'
-                  }}
-                >
-                  Amount (₹)
-                </TableCell>
-                <TableCell 
-                  sx={{ 
-                    fontWeight: 600,
-                    bgcolor: 'background.paper'
-                  }}
-                >
-                  Payment Type
-                </TableCell>
-                <TableCell 
-                  sx={{ 
-                    fontWeight: 600,
-                    bgcolor: 'background.paper'
-                  }}
-                >
-                  Payment Status
-                </TableCell>
+                <TableCell sx={{ fontWeight: 600, bgcolor: 'background.paper' }}>Order ID</TableCell>
+                <TableCell sx={{ fontWeight: 600, bgcolor: 'background.paper' }}>Customer</TableCell>
+                <TableCell sx={{ fontWeight: 600, bgcolor: 'background.paper' }}>Email</TableCell>
+                <TableCell sx={{ fontWeight: 600, bgcolor: 'background.paper' }}>Product</TableCell>
+                <TableCell sx={{ fontWeight: 600, bgcolor: 'background.paper' }}>Size</TableCell>
+                <TableCell sx={{ fontWeight: 600, bgcolor: 'background.paper' }}>Qty</TableCell>
+                <TableCell sx={{ fontWeight: 600, bgcolor: 'background.paper' }}>Amount (₹)</TableCell>
+                <TableCell sx={{ fontWeight: 600, bgcolor: 'background.paper' }}>Order Date</TableCell>
+                <TableCell sx={{ fontWeight: 600, bgcolor: 'background.paper' }}>Status</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {filteredRegistrations
+              {filteredOrders
                 .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                .map((registration) => (
+                .map((order) => (
                 <TableRow 
-                  key={registration._id}
+                  key={order._id}
                   sx={{ 
-                    '&:hover': { 
-                      bgcolor: 'action.hover' 
-                    },
+                    '&:hover': { bgcolor: 'action.hover' },
                     transition: 'background-color 0.2s'
                   }}
                 >
-                  <TableCell>{registration.uid}</TableCell>
-                  <TableCell>{registration.name}</TableCell>
-                  <TableCell>{registration.email}</TableCell>
-                  <TableCell>{registration.eventName}</TableCell>
-                  <TableCell>{registration.team? <>{registration.team.teamName} {registration.team.teamLeader?'(Leader)':'(Member)'}</>: 'N/A'}</TableCell>
-                  <TableCell>{formatDateTime(registration.registrationDate, currentTime)}</TableCell>
-                  <TableCell>₹{registration.payment.amount}</TableCell>
-                  <TableCell>{registration.payment.type}</TableCell>
+                  <TableCell>{order._id}</TableCell>
+                  <TableCell>{order.customerName}</TableCell>
+                  <TableCell>{order.customerEmail}</TableCell>
+                  <TableCell>{order.productName}</TableCell>
+                  <TableCell>{order.size}</TableCell>
+                  <TableCell>{order.quantity}</TableCell>
+                  <TableCell>₹{order.amount}</TableCell>
+                  <TableCell>{formatDateTime(order.createdAt, currentTime)}</TableCell>
                   <TableCell>
                     <Select
-                      value={registration.payment.status}
-                      onChange={(e) => handlePaymentStatusChange(registration.uid, e.target.value, registration.eventId, registration.payment.type, registration.payment.date)}
+                      value={order.status}
+                      onChange={(e) => handleOrderStatusChange(order._id, e.target.value)}
                       size="small"
                       sx={{
-                        minWidth: 120,
+                        minWidth: 100,
                         bgcolor: 
-                          registration.payment.status === 'free' ? '#9c27b0' :
-                          registration.payment.status === 'paid' ? 'success.dark' :
-                          registration.payment.status === 'pending' ? 'warning.dark' :
+                          order.status === 'paid' ? 'success.dark' :
+                          order.status === 'pending' ? 'warning.dark' :
+                          order.status === 'shipped' ? 'info.dark' :
+                          order.status === 'delivered' ? 'success.main' :
                           'error.dark',
-                        '& .MuiSelect-select': {
-                          color: '#FFFFFF'
-                        },
-                        '& .MuiSelect-icon': {
-                          color: '#FFFFFF'
-                        },
-                        '& .MuiOutlinedInput-notchedOutline': {
-                          borderColor: registration.payment.status === 'free' ? '#9c27b0' : 'transparent'
-                        }
+                        '& .MuiSelect-select': { color: '#FFFFFF', fontSize: '0.8rem' },
+                        '& .MuiSelect-icon': { color: '#FFFFFF' },
                       }}
-                      MenuProps={{
-                        PaperProps: {
-                          sx: {
-                            '& .MuiMenuItem-root[data-value="free"]': {
-                              color: '#000000'
-                            }
-                          }
-                        }
-                      }}
-                      disabled={registration.payment.status === 'free'}
                     >
-                      <MenuItem value="paid">PAID</MenuItem>
                       <MenuItem value="pending">PENDING</MenuItem>
-                      <MenuItem value="unpaid">UNPAID</MenuItem>
-                      <MenuItem value="free" data-value="free">FREE</MenuItem>
+                      <MenuItem value="paid">PAID</MenuItem>
+                      <MenuItem value="shipped">SHIPPED</MenuItem>
+                      <MenuItem value="delivered">DELIVERED</MenuItem>
+                      <MenuItem value="cancelled">CANCELLED</MenuItem>
                     </Select>
                   </TableCell>
                 </TableRow>
@@ -670,7 +564,7 @@ export default function Dashboard() {
           </Table>
           <TablePagination
             component="div"
-            count={filteredRegistrations.length}
+            count={filteredOrders.length}
             page={page}
             onPageChange={(event, newPage) => setPage(newPage)}
             rowsPerPage={rowsPerPage}
@@ -679,8 +573,8 @@ export default function Dashboard() {
         </TableContainer>
       )}
 
-      {/* Package Table */}
-      {viewMode === 'packages' && (
+      {/* Products Table */}
+      {viewMode === 'products' && (
         <TableContainer 
           component={Paper}
           sx={{ 
@@ -694,57 +588,46 @@ export default function Dashboard() {
           <Table sx={{ minWidth: 650 }} stickyHeader>
             <TableHead>
               <TableRow>
-                <TableCell sx={{ fontWeight: 600 }}>User ID</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Product ID</TableCell>
                 <TableCell sx={{ fontWeight: 600 }}>Name</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Email</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Payment Type</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Payment ID</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Amount (₹)</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Registered Events</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Payment Status</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Category</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Price (₹)</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Stock</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Status</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Created Date</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {packages
+              {products
                 .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                .map((pkg) => (
+                .map((product) => (
                   <TableRow 
-                    key={pkg._id}
+                    key={product._id}
                     sx={{ 
                       '&:hover': { bgcolor: 'action.hover' },
                       transition: 'background-color 0.2s'
                     }}
                   >
-                    <TableCell>{pkg.userId}</TableCell>
-                    <TableCell>{pkg.userName}</TableCell>
-                    <TableCell>{pkg.email}</TableCell>
-                    <TableCell>{pkg.paymentType}</TableCell>
-                    <TableCell>{pkg.paymentId || 'N/A'}</TableCell>
-                    <TableCell>₹ 200</TableCell>
-                    <TableCell>{pkg.registeredEvents} / 6</TableCell>
+                    <TableCell>{product._id}</TableCell>
+                    <TableCell>{product.name}</TableCell>
+                    <TableCell>{product.category}</TableCell>
+                    <TableCell>₹{product.price}</TableCell>
+                    <TableCell>{product.stock}</TableCell>
                     <TableCell>
-                      <Select
-                        value={pkg.paymentStatus}
-                        onChange={(e) => handlePackagePaymentUpdate(pkg._id, e.target.value)}
+                      <Chip 
+                        label={product.status} 
+                        color={product.status === 'active' ? 'success' : 'default'}
                         size="small"
-                        sx={{
-                          minWidth: 120,
-                          bgcolor: pkg.paymentStatus === 'paid' ? 'success.dark' : 'warning.dark',
-                          '& .MuiSelect-select': { color: '#FFFFFF' },
-                          '& .MuiSelect-icon': { color: '#FFFFFF' },
-                        }}
-                      >
-                        <MenuItem value="pending">PENDING</MenuItem>
-                        <MenuItem value="paid">PAID</MenuItem>
-                      </Select>
+                      />
                     </TableCell>
+                    <TableCell>{formatDateTime(product.createdAt, currentTime)}</TableCell>
                   </TableRow>
                 ))}
             </TableBody>
           </Table>
           <TablePagination
             component="div"
-            count={packages.length}
+            count={products.length}
             page={page}
             onPageChange={(event, newPage) => setPage(newPage)}
             rowsPerPage={rowsPerPage}
@@ -753,14 +636,19 @@ export default function Dashboard() {
         </TableContainer>
       )}
 
-      {/* Add Snackbar for notifications */}
+      {/* Snackbar for notifications */}
       <Snackbar
-        open={snackbar?.open}
+        open={snackbar.open}
         autoHideDuration={6000}
         onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
-        message={snackbar?.message}
-        severity={snackbar?.severity}
-      />
+      >
+        <Alert 
+          onClose={() => setSnackbar(prev => ({ ...prev, open: false }))} 
+          severity={snackbar.severity}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   )
 }

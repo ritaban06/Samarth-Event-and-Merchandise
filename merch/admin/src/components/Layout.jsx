@@ -18,7 +18,7 @@ import { useNavigate } from 'react-router-dom'
 import DashboardIcon from '@mui/icons-material/Dashboard'
 import LogoutIcon from '@mui/icons-material/Logout'
 import MenuIcon from '@mui/icons-material/Menu'
-import EventIcon from '@mui/icons-material/Event'
+import StorefrontIcon from '@mui/icons-material/Storefront'
 import { useState } from 'react'
 
 const drawerWidth = 200
@@ -52,11 +52,11 @@ function Layout({ setIsAuthenticated }) {
           </ListItemIcon>
           <ListItemText primary="Dashboard" />
         </ListItem>
-        <ListItem button onClick={() => navigate('/events')}>
+        <ListItem button onClick={() => navigate('/merch')}>
           <ListItemIcon>
-            <EventIcon />
+            <StorefrontIcon />
           </ListItemIcon>
-          <ListItemText primary="Events" />
+          <ListItemText primary="Merchandise" />
         </ListItem>
         <ListItem button onClick={handleLogout}>
           <ListItemIcon>
@@ -86,7 +86,7 @@ function Layout({ setIsAuthenticated }) {
             <MenuIcon />
           </IconButton>
           <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-            Event Management
+            Merchandise Management
           </Typography>
         </Toolbar>
       </AppBar>

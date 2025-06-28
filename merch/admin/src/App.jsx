@@ -5,7 +5,7 @@ import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import Layout from './components/Layout'
 import theme from './theme'
-import Events from './pages/Events'
+import Merch from './pages/Merch'
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -39,7 +39,7 @@ function App() {
             }
           >
             <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/events" element={<Events />} />
+            <Route path="/merch" element={<Merch />} />
           </Route>
           <Route path="*" element={<Navigate to="/login" />} />
         </Routes>
