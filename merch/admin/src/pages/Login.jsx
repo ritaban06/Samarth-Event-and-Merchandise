@@ -59,6 +59,7 @@ function Login({ setIsAuthenticated }) {
         const response = await axios.post(`${import.meta.env.VITE_API_URL}/auth/admin/login`, credentials);
         localStorage.setItem('adminToken', response.data.token);
         setIsAuthenticated(true);
+        navigate('/dashboard'); // Explicitly navigate to dashboard
     } catch (err) {
         console.error(err); // Log the error for debugging
         setError('Invalid credentials');

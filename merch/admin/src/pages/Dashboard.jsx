@@ -60,17 +60,29 @@ export default function Dashboard() {
   }, [])
 
   const fetchOrders = async () => {
+    const token = localStorage.getItem('adminToken')
+    if (!token) {
+      setError('No authentication token found')
+      return
+    }
+
     try {
       setLoading(true)
       const response = await axios.get(`${API_URL}/admin/orders`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+          'Authorization': `Bearer ${token}`
         }
       })
       setOrders(response.data || [])
       setError(null)
     } catch (error) {
       console.error('Error fetching orders:', error)
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        // Token is invalid, redirect to login
+        localStorage.removeItem('adminToken')
+        window.location.href = '/login'
+        return
+      }
       setError('Failed to load orders. Using demo data.')
       // Demo data for development
       setOrders([
@@ -103,15 +115,26 @@ export default function Dashboard() {
   }
 
   const fetchProducts = async () => {
+    const token = localStorage.getItem('adminToken')
+    if (!token) {
+      return
+    }
+
     try {
       const response = await axios.get(`${API_URL}/admin/products`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+          'Authorization': `Bearer ${token}`
         }
       })
       setProducts(response.data || [])
     } catch (error) {
       console.error('Error fetching products:', error)
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        // Token is invalid, redirect to login
+        localStorage.removeItem('adminToken')
+        window.location.href = '/login'
+        return
+      }
       // Demo data for development
       setProducts([
         {
