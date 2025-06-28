@@ -166,17 +166,17 @@ const Login = ({ setIsLoggedIn }) => {
   };
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="fixed inset-0 w-full h-full bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900 overflow-y-auto"
+      className="w-full min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900 overflow-y-auto pt-20"
     >
       {/* Background effects */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(120,119,198,0.3)_0,rgba(0,0,0,0)_60%)] pointer-events-none" />
       <div className="absolute inset-0 bg-grid-pattern opacity-[0.02] pointer-events-none" />
       
       {/* Content container */}
-      <div className="min-h-screen w-full flex items-center justify-center p-4 sm:p-6 md:p-8">
+      <div className="w-full min-h-screen flex items-center justify-center p-4 sm:p-6 md:p-8">
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

@@ -29,7 +29,7 @@ const Footer = () => {
   };
 
   return (
-    <div className="relative bg-[#121212] flex flex-col backdrop-blur-lg border-t pt-8 md:pt-12 mt-16 border-[#A78BFA]">
+    <div className="relative bg-[#121212] flex flex-col backdrop-blur-lg border-t pt-8 md:pt-12 border-[#A78BFA]">
       {/* Hogwarts-inspired decorative top border */}
       <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#8B5CF6] via-[#DAA520] to-[#8B5CF6]"></div>
       
