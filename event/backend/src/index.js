@@ -41,7 +41,11 @@ mongoose.connect(process.env.MONGO_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true
 })
-.then(() => console.log('MongoDB Connected: ', process.env.MONGO_NAME))
+.then(() => {
+    // Parse cluster/host name from MONGO_URI
+    const hostName = process.env.MONGO_URI.split('@')[1].split('/')[0];
+    console.log(`MongoDB Connected successfully to database: ${hostName}`);
+})
 .catch(err => console.error('MongoDB Connection Error:', err));
 
 // Routes
