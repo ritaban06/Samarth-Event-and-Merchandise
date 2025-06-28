@@ -1,24 +1,21 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar.jsx";
 import Home from "./pages/Home";
-import Events from "./pages/Events";
+import Products from "./pages/Products";
+import Cart from "./pages/Cart";
+import Orders from "./pages/Orders";
 import LogoAnimation from "./components/LogoAnimation.jsx";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import Profile from "./pages/Profile";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { useState, useEffect } from "react";
 import { AuthProvider } from "./context/AuthContext.jsx";
 import { CartProvider } from "./context/CartContext.jsx";
-import Profile from "./pages/Profile";
-import Teams from "./pages/teams.jsx";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Footer from "./components/Footer.jsx";
 import BgParticles from "./components/BgParticles.jsx";
 import OtpVerification from "./pages/OtpVerification.jsx";
-import Packages from './pages/Packages';
-import Products from './pages/Products';
-import Cart from './pages/Cart';
-import Orders from './pages/Orders';
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
@@ -57,10 +54,33 @@ const App = () => {
               <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/products" element={<Products />} />
-                <Route path="/cart" element={<Cart />} />
-                <Route path="/orders" element={<Orders />} />
+                <Route 
+                  path="/cart" 
+                  element={
+                    <ProtectedRoute>
+                      <Cart />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/orders" 
+                  element={
+                    <ProtectedRoute>
+                      <Orders />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/profile" 
+                  element={
+                    <ProtectedRoute>
+                      <Profile />
+                    </ProtectedRoute>
+                  } 
+                />
                 <Route path="/login" element={<Login setIsLoggedIn={setIsLoggedIn} />} />
                 <Route path="/register" element={<Register />} />
+                <Route path="/otp-verification" element={<OtpVerification />} />
               </Routes>
             </main>
             <Footer />
