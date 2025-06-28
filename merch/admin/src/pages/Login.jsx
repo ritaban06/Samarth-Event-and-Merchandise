@@ -56,7 +56,7 @@ function Login({ setIsAuthenticated }) {
     e.preventDefault();
     
     try {
-        const response = await axios.post(`${import.meta.env.VITE_API_URL}/admin/login`, credentials);
+        const response = await axios.post(`${import.meta.env.VITE_API_URL}/auth/admin/login`, credentials);
         localStorage.setItem('adminToken', response.data.token);
         setIsAuthenticated(true);
     } catch (err) {

@@ -110,9 +110,12 @@ app.get("/api/payment/:paymentId", async(req, res) => {
 // Google Sheets Authentication
 const authenticateGoogleSheets = async () => {
   try {
+    const googleCredentials = JSON.parse(process.env.GOOGLE_CREDENTIALS);
+    const doc = new GoogleSpreadsheet(process.env.GOOGLE_SHEET_ID);
+    
     await doc.useServiceAccountAuth({
-      client_email: JSON.parse(process.env.GOOGLE_CREDENTIALS).client_email,
-      private_key: JSON.parse(process.env.GOOGLE_CREDENTIALS).private_key,
+      client_email: googleCredentials.client_email,
+      private_key: googleCredentials.private_key,
     });
     await doc.loadInfo();
     console.log('Google Sheets connected:', doc.title);

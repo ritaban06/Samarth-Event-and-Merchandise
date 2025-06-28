@@ -62,7 +62,7 @@ export default function Dashboard() {
   const fetchOrders = async () => {
     try {
       setLoading(true)
-      const response = await axios.get(`${API_URL}/orders`, {
+      const response = await axios.get(`${API_URL}/admin/orders`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
         }
@@ -104,7 +104,7 @@ export default function Dashboard() {
 
   const fetchProducts = async () => {
     try {
-      const response = await axios.get(`${API_URL}/products`, {
+      const response = await axios.get(`${API_URL}/admin/products`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
         }
@@ -211,7 +211,7 @@ export default function Dashboard() {
       setSnackbar({ open: true, message: 'Updating order status...', severity: 'info' })
       
       const response = await axios.put(
-        `${API_URL}/orders/${orderId}/status`,
+        `${API_URL}/admin/orders/${orderId}/status`,
         { status: newStatus },
         {
           headers: { Authorization: `Bearer ${localStorage.getItem('adminToken')}` }

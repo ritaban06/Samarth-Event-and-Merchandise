@@ -15,10 +15,10 @@ const authenticateAdmin = (req, res, next) => {
 
     try {
         const jwt = require('jsonwebtoken');
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const decoded = jwt.verify(token, process.env.JWTSECRET);
         
         // Check if user is admin
-        if (decoded.username !== process.env.ADMIN_USERNAME) {
+        if (decoded.user.username !== process.env.ADMIN_USERNAME) {
             return res.status(403).json({ error: 'Access denied. Admin privileges required.' });
         }
         
@@ -70,7 +70,7 @@ router.get('/dashboard/stats', authenticateAdmin, async (req, res) => {
 // Get all orders with filtering
 router.get('/orders', authenticateAdmin, async (req, res) => {
     try {
-        const { status, startDate, endDate, page = 1, limit = 10 } = req.query;
+        const { status, startDate, endDate, page = 1, limit = 100 } = req.query;
         
         let filter = {};
         
@@ -94,18 +94,8 @@ router.get('/orders', authenticateAdmin, async (req, res) => {
             .populate('user', 'userName email phone')
             .populate('items.product', 'name price images');
 
-        const totalOrders = await Order.countDocuments(filter);
-        
-        res.json({
-            orders,
-            pagination: {
-                currentPage: parseInt(page),
-                totalPages: Math.ceil(totalOrders / limit),
-                totalOrders,
-                hasNext: skip + orders.length < totalOrders,
-                hasPrev: page > 1
-            }
-        });
+        // Return just the orders array for admin frontend
+        res.json(orders);
     } catch (error) {
         console.error('Get orders error:', error);
         res.status(500).json({ error: 'Failed to fetch orders' });
@@ -144,7 +134,7 @@ router.patch('/orders/:orderId/status', authenticateAdmin, async (req, res) => {
 // Get all products for admin
 router.get('/products', authenticateAdmin, async (req, res) => {
     try {
-        const { category, status, page = 1, limit = 10 } = req.query;
+        const { category, status, page = 1, limit = 100 } = req.query;
         
         let filter = {};
         
@@ -163,18 +153,8 @@ router.get('/products', authenticateAdmin, async (req, res) => {
             .skip(skip)
             .limit(parseInt(limit));
 
-        const totalProducts = await Product.countDocuments(filter);
-        
-        res.json({
-            products,
-            pagination: {
-                currentPage: parseInt(page),
-                totalPages: Math.ceil(totalProducts / limit),
-                totalProducts,
-                hasNext: skip + products.length < totalProducts,
-                hasPrev: page > 1
-            }
-        });
+        // Return just the products array for admin frontend
+        res.json(products);
     } catch (error) {
         console.error('Get products error:', error);
         res.status(500).json({ error: 'Failed to fetch products' });
@@ -195,6 +175,28 @@ router.post('/products', authenticateAdmin, async (req, res) => {
 
 // Update product
 router.put('/products/:productId', authenticateAdmin, async (req, res) => {
+    try {
+        const { productId } = req.params;
+        
+        const product = await Product.findByIdAndUpdate(
+            productId,
+            { ...req.body, updatedAt: new Date() },
+            { new: true, runValidators: true }
+        );
+
+        if (!product) {
+            return res.status(404).json({ error: 'Product not found' });
+        }
+
+        res.json({ message: 'Product updated successfully', product });
+    } catch (error) {
+        console.error('Update product error:', error);
+        res.status(500).json({ error: 'Failed to update product' });
+    }
+});
+
+// Update product (PATCH method for partial updates)
+router.patch('/products/:productId', authenticateAdmin, async (req, res) => {
     try {
         const { productId } = req.params;
         
@@ -321,6 +323,90 @@ router.post('/sync-orders', authenticateAdmin, async (req, res) => {
 
     } catch (error) {
         console.error('Sync orders error:', error);
+        res.status(500).json({ 
+            error: 'Failed to sync orders to Google Sheets',
+            details: error.message 
+        });
+    }
+});
+
+// Sync orders to Google Sheets (alternative endpoint name for frontend compatibility)
+router.post('/sync-sheets', authenticateAdmin, async (req, res) => {
+    try {
+        const { orders } = req.body;
+        
+        // Use the provided orders from frontend or fetch from database
+        let ordersToSync = orders;
+        if (!ordersToSync || ordersToSync.length === 0) {
+            ordersToSync = await Order.find({})
+                .sort({ createdAt: -1 })
+                .populate('user', 'userName email phone')
+                .populate('items.product', 'name price category');
+        }
+
+        if (ordersToSync.length === 0) {
+            return res.status(400).json({ error: 'No orders found to sync' });
+        }
+
+        // Initialize Google Sheets
+        const googleCredentials = JSON.parse(process.env.GOOGLE_CREDENTIALS);
+        const serviceAccountAuth = new JWT({
+            email: googleCredentials.client_email,
+            key: googleCredentials.private_key,
+            scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+        });
+
+        const doc = new GoogleSpreadsheet(process.env.GOOGLE_SHEET_ID, serviceAccountAuth);
+        await doc.loadInfo();
+
+        // Get or create the Orders sheet
+        let sheet = doc.sheetsByTitle['Orders'];
+        if (!sheet) {
+            sheet = await doc.addSheet({ 
+                title: 'Orders',
+                headerValues: [
+                    'Order ID', 'Customer Name', 'Email', 'Phone', 'Status',
+                    'Total Amount', 'Order Date', 'Items', 'Quantities', 'Sizes', 'Colors'
+                ]
+            });
+        }
+
+        // Clear existing data (except headers)
+        await sheet.clear('A2:K');
+
+        // Prepare rows for insertion
+        const rows = ordersToSync.map(order => {
+            const items = order.items ? order.items.map(item => item.product?.name || item.productName).join(', ') : order.productName || 'N/A';
+            const quantities = order.items ? order.items.map(item => item.quantity).join(', ') : order.quantity || 'N/A';
+            const sizes = order.items ? order.items.map(item => item.size || 'N/A').join(', ') : order.size || 'N/A';
+            const colors = order.items ? order.items.map(item => item.color || 'N/A').join(', ') : order.color || 'N/A';
+
+            return {
+                'Order ID': order._id?.toString() || order.id || 'N/A',
+                'Customer Name': order.user?.userName || order.customerName || 'N/A',
+                'Email': order.user?.email || order.customerEmail || 'N/A',
+                'Phone': order.user?.phone || order.customerPhone || 'N/A',
+                'Status': order.status || 'N/A',
+                'Total Amount': order.totalAmount || order.amount || 'N/A',
+                'Order Date': order.createdAt ? new Date(order.createdAt).toISOString().split('T')[0] : 'N/A',
+                'Items': items,
+                'Quantities': quantities,
+                'Sizes': sizes,
+                'Colors': colors
+            };
+        });
+
+        // Add rows to sheet
+        await sheet.addRows(rows);
+
+        res.json({ 
+            message: `Successfully synced ${ordersToSync.length} orders to Google Sheets`,
+            ordersCount: ordersToSync.length,
+            sheetUrl: `https://docs.google.com/spreadsheets/d/${process.env.GOOGLE_SHEET_ID}`
+        });
+
+    } catch (error) {
+        console.error('Sync sheets error:', error);
         res.status(500).json({ 
             error: 'Failed to sync orders to Google Sheets',
             details: error.message 

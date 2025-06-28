@@ -54,7 +54,7 @@ const Merch = () => {
 
   const fetchProducts = async () => {
     try {
-      const response = await axios.get(`${API_URL}/products`, {
+      const response = await axios.get(`${API_URL}/admin/products`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('adminToken')}`,
         },
@@ -133,14 +133,14 @@ const Merch = () => {
       console.log('Data being sent to the backend');
 
       if (isEditing) {
-        await axios.patch(`${API_URL}/products/${formData._id}`, dataToSend, {
+        await axios.patch(`${API_URL}/admin/products/${formData._id}`, dataToSend, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('adminToken')}`,
           },
         });
         setSnackbar({ open: true, message: 'Product updated successfully!', severity: 'success' });
       } else {
-        await axios.post(`${API_URL}/products`, dataToSend, {
+        await axios.post(`${API_URL}/admin/products`, dataToSend, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('adminToken')}`,
           },
@@ -163,7 +163,7 @@ const Merch = () => {
   const handleDeleteProduct = async (id) => {
     if (window.confirm('Are you sure you want to delete this product?')) {
       try {
-        await axios.delete(`${API_URL}/products/${id}`, {
+        await axios.delete(`${API_URL}/admin/products/${id}`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('adminToken')}`,
           },
@@ -187,7 +187,7 @@ const Merch = () => {
       const updatedStatus = !productToToggle.isActive;
 
       const response = await axios.patch(
-        `${API_URL}/products/${id}`, 
+        `${API_URL}/admin/products/${id}`, 
         { isActive: updatedStatus },
         {
           headers: {
