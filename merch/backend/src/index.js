@@ -34,11 +34,15 @@ app.use(cors({
 app.use(express.json()); // Parse JSON request body
 
 // MongoDB Connection
-mongoose.connect(process.env.MONGO_URI || process.env.MONGODB_URI, {
+mongoose.connect(process.env.MONGO_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true
 })
-.then(() => console.log('MongoDB Connected successfully: ', process.env.MONGO_NAME))
+.then(() => {
+    // Parse database name from MONGO_URI
+    const dbName = process.env.MONGO_URI.split('/').pop().split('?')[0];
+    console.log(`MongoDB Connected successfully to database: ${dbName}`);
+})
 .catch(err => console.error('MongoDB Connection Error:', err));
 
 // Routes

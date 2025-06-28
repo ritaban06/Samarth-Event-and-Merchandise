@@ -54,7 +54,7 @@ const Register = () => {
         localStorage.setItem("otp", JSON.stringify({ value: otp, expiry: expiryTime }));
 
         // Send OTP to email
-        const res = await axios.post(`${import.meta.env.VITE_API_URL}/otp`, { email: form.email, otp: otp });
+        const res = await axios.post(`${import.meta.env.VITE_API_URL}/auth/otp`, { email: form.email, otp: otp });
 
         // Check if the OTP was sent successfully
         if (res.data.success) {

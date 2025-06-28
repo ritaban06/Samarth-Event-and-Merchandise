@@ -70,7 +70,7 @@ const OtpVerification = ({ setIsLoggedIn }) => {
     }
 
     try {
-      const response = await axios.post(`${import.meta.env.VITE_API_URL}/newuserauth`, form);
+      const response = await axios.post(`${import.meta.env.VITE_API_URL}/auth/newuserauth`, form);
       const user = response.data.user;
       setIsLoggedIn(true);
       localStorage.removeItem("otp");
@@ -88,13 +88,13 @@ const OtpVerification = ({ setIsLoggedIn }) => {
 
     if (storedOtpData && new Date().getTime() < storedOtpData.expiry) {
         //("Using existing OTP:", storedOtpData.value);
-        res = await axios.post(`${import.meta.env.VITE_API_URL}/otp`, { email: form.email, otp: storedOtpData.value });
+        res = await axios.post(`${import.meta.env.VITE_API_URL}/auth/otp`, { email: form.email, otp: storedOtpData.value });
     } else {
         const newOtp = Math.floor(100000 + Math.random() * 900000).toString();
         const expiryTime = new Date().getTime() + 10 * 60 * 1000;
         localStorage.setItem("otp", JSON.stringify({ value: newOtp, expiry: expiryTime }));
         //("Generated new OTP:", newOtp);
-        res = await axios.post(`${import.meta.env.VITE_API_URL}/otp`, { email: form.email, otp: newOtp });
+        res = await axios.post(`${import.meta.env.VITE_API_URL}/auth/otp`, { email: form.email, otp: newOtp });
     }
 
     if (res.data.success) { // Assuming your API returns a success field

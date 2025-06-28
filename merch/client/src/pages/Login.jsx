@@ -42,7 +42,7 @@ const Login = ({ setIsLoggedIn }) => {
         throw new Error("Google authentication failed - No code received");
       }
 
-      const result = await fetch(`${import.meta.env.VITE_API_URL}/google`, {
+      const result = await fetch(`${import.meta.env.VITE_API_URL}/auth/google`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -91,7 +91,7 @@ const Login = ({ setIsLoggedIn }) => {
       const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
       
       // First verify credentials - note the /api prefix is already in API_URL
-      const response = await axios.post(`${API_URL}/verify`, {
+      const response = await axios.post(`${API_URL}/auth/verify`, {
         email: credentials.email,
         password: credentials.password
       }, {
@@ -109,7 +109,7 @@ const Login = ({ setIsLoggedIn }) => {
       localStorage.setItem('token', token);
 
       // Get user data
-      const userResponse = await axios.post(`${API_URL}/datafetch`, {}, {
+      const userResponse = await axios.post(`${API_URL}/auth/datafetch`, {}, {
         headers: {
           'auth-token': token,
           'Content-Type': 'application/json'
