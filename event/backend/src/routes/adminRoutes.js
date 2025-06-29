@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 const router = express.Router();
 const { GoogleSpreadsheet } = require('google-spreadsheet');
 const Event = require('../models/eventModel');
-const { getOrCreateEventSheet, executeWithBackoff, formatPaymentStatusCell, bulkAddRows, 
+const { executeWithBackoff, formatPaymentStatusCell, bulkAddRows, 
         batchFormatPaymentStatusCells, updateRowById, BASE_HEADERS } = require('../utils/sheetUtils');
 const { PaidConfirmation } = require('../utils/emailService');
 const jwt = require('jsonwebtoken');
@@ -129,9 +129,48 @@ router.put('/admin/registration/:id/payment-status', async (req, res) => {
         
         await executeWithBackoff(() => doc.loadInfo());
   
+        
         console.log('Syncing sheet for event:', event.eventName);
         
-        const sheet = await getOrCreateEventSheet(doc, event.eventName);
+        // Create the sheet manually since getOrCreateEventSheet is not exported from sheetUtils
+        await executeWithBackoff(() => doc.loadInfo());
+        
+        const cleanedEventName = event.eventName.trim().replace(/[^\w\s-]/g, '').substring(0, 100);
+        let sheet = doc.sheetsByTitle[cleanedEventName];
+        
+        if (!sheet) {
+            // Create new sheet with headers
+            const headers = [
+                'Registration ID',
+                'Student Name', 
+                'Email',
+                'Event Name',
+                'Registration Date',
+                'Amount (₹)',
+                'Payment Status',
+                'Payment Type'
+            ];
+            
+            sheet = await executeWithBackoff(() => 
+                doc.addSheet({
+                    title: cleanedEventName,
+                    headerValues: headers
+                })
+            );
+            
+            // Format headers
+            await executeWithBackoff(async () => {
+                await sheet.loadCells('A1:H1');
+                for (let i = 0; i < headers.length; i++) {
+                    const cell = sheet.getCell(0, i);
+                    cell.textFormat = { bold: true };
+                    cell.horizontalAlignment = 'CENTER';
+                    cell.backgroundColor = { red: 0.8, green: 0.8, blue: 0.8 };
+                }
+                await sheet.saveUpdatedCells();
+            });
+        }
+        
         if (!sheet) throw new Error('Failed to get or create sheet');
   
         // Use updateRowById from sheetUtils
