@@ -1,10 +1,9 @@
 # Samarth-Event-and-Merch
 
-### [Client Deployment](https://samarth-events.vercel.app) 
+### [Event Deployment](https://event.ritaban.me/) 
 
-### [Admin Deployment](https://samarth-events-admin.vercel.app) 
-   
-### Backend Deployment --> https://samarth-event-page-backend.onrender.com/api 
+### [Merch Deployment](https://merch.ritaban.me) 
+
      
 ### All Rounder Development (Riyal OG) --> 
 1. [Priyobrata Mondal](https://github.com/darkhorse404)   
