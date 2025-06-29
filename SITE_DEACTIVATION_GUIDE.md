@@ -67,7 +67,19 @@ vercel link
 **Alternative - Set env via CLI:**
 ```bash
 cd event/client
-vercel env add VITE_SITE_ACTIVE false
+# To change existing environment variable (not add new one)
+vercel env rm VITE_SITE_ACTIVE production
+vercel env add VITE_SITE_ACTIVE false production
+vercel --prod
+```
+
+**Or use the pull/push method:**
+```bash
+cd event/client
+# Pull current env, edit locally, then push back
+vercel env pull .env.vercel
+# Edit the .env.vercel file to change VITE_SITE_ACTIVE=false
+vercel env push .env.vercel
 vercel --prod
 ```
 
@@ -90,7 +102,19 @@ vercel --prod
 **Alternative - Set env via CLI:**
 ```bash
 cd event/client
-vercel env add VITE_SITE_ACTIVE true
+# To change existing environment variable (not add new one)
+vercel env rm VITE_SITE_ACTIVE production
+vercel env add VITE_SITE_ACTIVE true production
+vercel --prod
+```
+
+**Or use the pull/push method:**
+```bash
+cd event/client
+# Pull current env, edit locally, then push back
+vercel env pull .env.vercel
+# Edit the .env.vercel file to change VITE_SITE_ACTIVE=true
+vercel env push .env.vercel
 vercel --prod
 ```
 
@@ -117,8 +141,6 @@ vercel --prod
 
 ### Redirect URL
 The redirect destination is controlled by the `VITE_MERCH_URL` environment variable. If not set, it defaults to `https://merch.ritaban.me`.
-
-```
 
 ### Redirect Messages
 Update the `REDIRECT_MESSAGE` constant in `SiteStatus.jsx` to customize the user message.
@@ -196,3 +218,51 @@ When client is deactivated, you can monitor:
 - Backend API usage from admin operations
 
 This simplified system provides a professional way to manage the client-facing events site while keeping administrative and operational capabilities fully intact.
+
+## Troubleshooting
+
+### Environment Variable Already Exists Error
+
+If you get the error: `The variable "VITE_SITE_ACTIVE" has already been added to all Environments`, use one of these methods:
+
+**Method 1: Remove and Re-add (Recommended)**
+```bash
+cd event/client
+vercel env rm VITE_SITE_ACTIVE production
+vercel env add VITE_SITE_ACTIVE false production  # or true to reactivate
+vercel --prod
+```
+
+**Method 2: Pull, Edit, Push**
+```bash
+cd event/client
+vercel env pull .env.vercel
+# Edit the .env.vercel file manually to change VITE_SITE_ACTIVE value
+vercel env push .env.vercel
+vercel --prod
+```
+
+**Method 3: Use Vercel Dashboard**
+1. Go to your Vercel dashboard
+2. Navigate to your project settings
+3. Go to Environment Variables
+4. Edit the `VITE_SITE_ACTIVE` variable directly
+5. Redeploy from CLI: `vercel --prod`
+
+### Common CLI Commands
+```bash
+# List all environment variables
+vercel env ls
+
+# Remove a specific environment variable
+vercel env rm VITE_SITE_ACTIVE production
+
+# Add environment variable to specific environment
+vercel env add VITE_SITE_ACTIVE false production
+
+# Pull environment variables to local file
+vercel env pull .env.vercel
+
+# Push local environment file to Vercel
+vercel env push .env.vercel
+```
