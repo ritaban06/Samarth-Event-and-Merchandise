@@ -6,7 +6,7 @@ const SiteStatus = ({ children }) => {
   const [countdown, setCountdown] = useState(3);
 
   // Configuration
-  const MERCH_URL = import.meta.env.VITE_MERCH_URL || 'https://merch.ritaban.me';
+  const MERCH_URL = import.meta.env.VITE_MERCH_URL;
   const REDIRECT_MESSAGE = 'The events registration period has ended. You are being redirected to our merchandise store.';
 
   useEffect(() => {
