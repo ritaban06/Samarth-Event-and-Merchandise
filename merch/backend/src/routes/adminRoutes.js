@@ -348,62 +348,19 @@ router.post('/sync-sheets', authenticateAdmin, async (req, res) => {
             return res.status(400).json({ error: 'No orders found to sync' });
         }
 
-        // Initialize Google Sheets
-        const googleCredentials = JSON.parse(process.env.GOOGLE_CREDENTIALS);
-        const serviceAccountAuth = new JWT({
-            email: googleCredentials.client_email,
-            key: googleCredentials.private_key,
-            scopes: ['https://www.googleapis.com/auth/spreadsheets'],
-        });
-
-        const doc = new GoogleSpreadsheet(process.env.GOOGLE_SHEET_ID, serviceAccountAuth);
-        await doc.loadInfo();
-
-        // Get or create the Orders sheet
-        let sheet = doc.sheetsByTitle['Orders'];
-        if (!sheet) {
-            sheet = await doc.addSheet({ 
-                title: 'Orders',
-                headerValues: [
-                    'Order ID', 'Customer Name', 'Email', 'Phone', 'Status',
-                    'Total Amount', 'Order Date', 'Items', 'Quantities', 'Sizes', 'Colors'
-                ]
+        // Use the Google Sheets service
+        const googleSheetsService = require('../utils/googleSheets');
+        try {
+            await googleSheetsService.syncOrdersToSheets(ordersToSync);
+            
+            res.json({ 
+                message: `Successfully synced ${ordersToSync.length} orders to Google Sheets`,
+                ordersCount: ordersToSync.length,
+                sheetUrl: `https://docs.google.com/spreadsheets/d/${process.env.GOOGLE_SHEET_ID}`
             });
+        } catch (serviceError) {
+            throw new Error(`Google Sheets service error: ${serviceError.message}`);
         }
-
-        // Clear existing data (except headers)
-        await sheet.clear('A2:K');
-
-        // Prepare rows for insertion
-        const rows = ordersToSync.map(order => {
-            const items = order.items ? order.items.map(item => item.product?.name || item.productName).join(', ') : order.productName || 'N/A';
-            const quantities = order.items ? order.items.map(item => item.quantity).join(', ') : order.quantity || 'N/A';
-            const sizes = order.items ? order.items.map(item => item.size || 'N/A').join(', ') : order.size || 'N/A';
-            const colors = order.items ? order.items.map(item => item.color || 'N/A').join(', ') : order.color || 'N/A';
-
-            return {
-                'Order ID': order._id?.toString() || order.id || 'N/A',
-                'Customer Name': order.user?.userName || order.customerName || 'N/A',
-                'Email': order.user?.email || order.customerEmail || 'N/A',
-                'Phone': order.user?.phone || order.customerPhone || 'N/A',
-                'Status': order.status || 'N/A',
-                'Total Amount': order.totalAmount || order.amount || 'N/A',
-                'Order Date': order.createdAt ? new Date(order.createdAt).toISOString().split('T')[0] : 'N/A',
-                'Items': items,
-                'Quantities': quantities,
-                'Sizes': sizes,
-                'Colors': colors
-            };
-        });
-
-        // Add rows to sheet
-        await sheet.addRows(rows);
-
-        res.json({ 
-            message: `Successfully synced ${ordersToSync.length} orders to Google Sheets`,
-            ordersCount: ordersToSync.length,
-            sheetUrl: `https://docs.google.com/spreadsheets/d/${process.env.GOOGLE_SHEET_ID}`
-        });
 
     } catch (error) {
         console.error('Sync sheets error:', error);

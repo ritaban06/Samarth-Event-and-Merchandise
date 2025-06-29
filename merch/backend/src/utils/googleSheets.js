@@ -1,13 +1,12 @@
 const { GoogleSpreadsheet } = require('google-spreadsheet');
-const { executeWithBackoff, clearCache } = require('./sheetUtils');
-const Event = require('../models/eventModel');
+const { executeWithBackoff, clearCache, getOrCreateOrderSheet } = require('./sheetUtils');
+const Order = require('../models/orderModel');
 
 class GoogleSheetsService {
   constructor() {
     if (!process.env.GOOGLE_SHEET_ID) {
       throw new Error('GOOGLE_SHEET_ID is not configured');
     }
-    // console.log('Sheet ID configured:', process.env.GOOGLE_SHEET_ID);
     this.doc = new GoogleSpreadsheet(process.env.GOOGLE_SHEET_ID);
     this.initialized = false;
     this.lastInitTime = 0;
@@ -100,237 +99,136 @@ class GoogleSheetsService {
     }
   }
 
-  async syncToSheets(registrations) {
+  async syncOrdersToSheets(orders) {
     try {
-      console.log('Starting sync process...');
+      console.log('Starting orders sync process...');
       await this.init();
       
-      // Updated headers to include all required fields
-      
-      // Group registrations by event name
-      const registrationsByEvent = {};
-      registrations.forEach(reg => {
-        if (!registrationsByEvent[reg.eventName]) {
-          registrationsByEvent[reg.eventName] = [];
-        }
-        registrationsByEvent[reg.eventName].push(reg);
-      });
-      
-      console.log(`Found ${Object.keys(registrationsByEvent).length} events to sync`);
-      
-      // Process each event separately
-      for (const eventName of Object.keys(registrationsByEvent)) {
-        const eventRegs = registrationsByEvent[eventName];
-        console.log(`Processing ${eventRegs.length} registrations for event: ${eventName}`);
-
-      const event = await Event.findOne({ eventName });
-      if (!event) {
-        console.error(`Event not found in database: ${eventName}`);
-        continue;
+      if (!orders || orders.length === 0) {
+        throw new Error('No orders provided for sync');
       }
-
-      // Get additional field names from the event model
-      const additionalFieldNames = event.additionalFields?.map(field => field.name) || [];
       
-      // Create headers including additional fields
-      const headers = [
-        'Registration ID',
-        'Student Name',
-        'Email',
-        'Event Name',
-        'Payment Status',
-        'Payment ID',
-        'Payment Type',
-        'Payment Date',
-        'Amount (₹)',
-        'Team Name',
-        'Team UID',
-        'Team Role',
-        ...additionalFieldNames
-      ];
+      console.log(`Syncing ${orders.length} orders to Google Sheets`);
+      
+      // Get or create the Orders sheet
+      const sheet = await getOrCreateOrderSheet(this.doc, 'Orders');
+      
+      // Get existing rows
+      let existingRows;
+      try {
+        existingRows = await executeWithBackoff(() => sheet.getRows());
+        console.log(`Found ${existingRows.length} existing rows`);
+      } catch (error) {
+        console.error('Error fetching existing rows:', error);
+        existingRows = [];
+      }
+      
+      // Create a map of existing orders by Order ID
+      const existingOrders = new Map(
+        existingRows.map(row => [row['Order ID'], row])
+      );
+      
+      // Prepare updates in batches
+      const updates = [];
+      const newRows = [];
+      
+      for (const order of orders) {
+        const items = order.items ? order.items.map(item => 
+          item.product?.name || item.productName || 'Unknown Item'
+        ).join(', ') : 'N/A';
         
-        // Get or create a sheet for this event
-        const sheet = await getOrCreateEventSheet(this.doc, eventName);
+        const quantities = order.items ? order.items.map(item => 
+          item.quantity || 1
+        ).join(', ') : '1';
         
-        // Ensure headers are set correctly
-        try {
-          await executeWithBackoff(() => sheet.setHeaderRow(headers));
-          console.log(`Headers set for ${eventName} sheet`);
-        } catch (headerError) {
-          console.error(`Error setting headers for ${eventName}:`, headerError);
-        }
+        const sizes = order.items ? order.items.map(item => 
+          item.size || 'N/A'
+        ).join(', ') : 'N/A';
         
-        // Get existing rows for this event's sheet
-        let existingRows;
-        try {
-          existingRows = await executeWithBackoff(() => sheet.getRows());
-          console.log(`Found ${existingRows.length} existing rows for ${eventName}`);
-        } catch (error) {
-          console.error(`Error fetching existing rows for ${eventName}:`, error);
-          existingRows = [];
-        }
-        
-        // Create a map of existing registrations by registrationId
-        const existingRegistrations = new Map(
-          existingRows.map(row => [row['Registration ID'], row])
-        );
-        
-        // Prepare updates in batches
-        const updates = [];
-        const newRows = [];
-        
-        for (const reg of eventRegs) {
-          const rowData = {
-            'Registration ID': reg.uid || '',
-            'Student Name': reg.name || '',
-            'Email': reg.email || '',
-            'Event Name': reg.eventName || '',
-            'Payment Status': reg.payment?.status === 'paid' ? 'Paid' : 
-                            reg.payment?.status === 'pending' ? 'Pending' : 
-                            reg.payment?.status === 'package' ? 'Package' : 'Unpaid',
-            'Payment ID': reg.payment?.payment_id || 'N/A',
-            'Payment Type': reg.payment?.type || 'N/A',
-            'Payment Date': this.formatDate(reg.payment?.date || reg.registrationDate),
-            'Amount (₹)': this.formatAmount(reg.payment?.amount || reg.amount),
-            'Team Name': reg.team?.teamName || 'N/A',
-            'Team UID': reg.team?.teamuid || 'N/A',
-            'Team Role': reg.team? reg.team.teamLeader? 'Leader' : 'Member' : 'N/A'
-          };
+        const colors = order.items ? order.items.map(item => 
+          item.color || 'N/A'
+        ).join(', ') : 'N/A';
 
-          if (reg.additionalDetails instanceof Map) {
-            // If additionalDetails is a Map object
-            additionalFieldNames.forEach(fieldName => {
-              rowData[fieldName] = reg.additionalDetails.get(fieldName) || '';
-            });
-          } else if (typeof reg.additionalDetails === 'object' && reg.additionalDetails !== null) {
-            // If additionalDetails is a regular object
-            additionalFieldNames.forEach(fieldName => {
-              rowData[fieldName] = reg.additionalDetails[fieldName] || '';
-            });
-          }
-          
-          const existingRow = existingRegistrations.get(rowData['Registration ID']);
-          if (existingRow) {
-            updates.push({ row: existingRow, data: rowData });
-          } else {
-            newRows.push(rowData);
-          }
+        const rowData = {
+          'Order ID': order._id?.toString() || order.id || 'N/A',
+          'Customer Name': order.user?.userName || order.customerName || 'N/A',
+          'Email': order.user?.email || order.customerEmail || 'N/A',
+          'Phone': order.user?.phone || order.customerPhone || 'N/A',
+          'Status': order.status || 'pending',
+          'Total Amount': this.formatAmount(order.totalAmount || order.amount),
+          'Order Date': this.formatDate(order.createdAt || order.orderDate),
+          'Items': items,
+          'Quantities': quantities,
+          'Sizes': sizes,
+          'Colors': colors
+        };
+        
+        const existingRow = existingOrders.get(rowData['Order ID']);
+        if (existingRow) {
+          updates.push({ row: existingRow, data: rowData });
+        } else {
+          newRows.push(rowData);
         }
-        
-        // Process updates in batches
-        console.log(`Processing ${updates.length} updates and ${newRows.length} new rows for ${eventName}`);
-        
-        // Update existing rows in batches
-        for (let i = 0; i < updates.length; i += this.batchSize) {
-          const batch = updates.slice(i, i + this.batchSize);
-          await Promise.all(batch.map(async ({ row, data }) => {
-            Object.keys(data).forEach(key => {
-              row[key] = data[key];
-            });
-            try {
-              await executeWithBackoff(() => row.save());
-            } catch (error) {
-              console.error(`Failed to update row ${data['Registration ID']} for ${eventName}:`, error);
-            }
-          }));
-          
-          console.log(`Updated batch ${i / this.batchSize + 1} of ${Math.ceil(updates.length / this.batchSize)} for ${eventName}`);
-          
-          // Small delay between batches to prevent quota issues
-          if (i + this.batchSize < updates.length) {
-            await new Promise(resolve => setTimeout(resolve, 1000));
-          }
-        }
-        
-        // Add new rows in batches
-        for (let i = 0; i < newRows.length; i += this.batchSize) {
-          const batch = newRows.slice(i, i + this.batchSize);
-          try {
-            await executeWithBackoff(() => sheet.addRows(batch));
-            console.log(`Added batch ${i / this.batchSize + 1} of ${Math.ceil(newRows.length / this.batchSize)} for ${eventName}`);
-          } catch (error) {
-            console.error(`Failed to add batch of rows for ${eventName}:`, error);
-            
-            // Fall back to adding one by one if batch fails
-            for (const row of batch) {
-              try {
-                await executeWithBackoff(() => sheet.addRow(row));
-                console.log(`Added row for ${row['Registration ID']} in ${eventName}`);
-              } catch (rowError) {
-                console.error(`Failed to add row ${row['Registration ID']} for ${eventName}:`, rowError);
-              }
-              
-              // Add a small delay between individual row additions
-              await new Promise(resolve => setTimeout(resolve, 200));
-            }
-          }
-          
-          // Small delay between batches
-          if (i + this.batchSize < newRows.length) {
-            await new Promise(resolve => setTimeout(resolve, 1000));
-          }
-        }
-        
-        // Format the header row and add conditional formatting in batches
-        try {
-          // Get the column indices
-          const paymentStatusIndex = headers.indexOf('Payment Status');
-          const lastRow = sheet.rowCount;
-          
-          // Format headers in one batch
-          await executeWithBackoff(async () => {
-            const headerRange = `A1:${String.fromCharCode(64 + headers.length)}1`;
-            await sheet.loadCells(headerRange);  // Load header row
-            for (let i = 0; i < headers.length; i++) {
-              const cell = sheet.getCell(0, i);
-              cell.textFormat = { bold: true };
-              cell.horizontalAlignment = 'CENTER';
-              cell.backgroundColor = { red: 0.8, green: 0.8, blue: 0.8 };
-            }
-            await sheet.saveUpdatedCells();
+      }
+      
+      // Process updates in batches
+      console.log(`Processing ${updates.length} updates and ${newRows.length} new rows`);
+      
+      // Update existing rows in batches
+      for (let i = 0; i < updates.length; i += this.batchSize) {
+        const batch = updates.slice(i, i + this.batchSize);
+        await Promise.all(batch.map(async ({ row, data }) => {
+          Object.keys(data).forEach(key => {
+            row[key] = data[key];
           });
-          
-          // Process payment status formatting in batches
-          // const BATCH_SIZE = 50; // Format 50 rows at a time
-          // for (let startRow = 1; startRow < lastRow; startRow += BATCH_SIZE) {
-          //   const endRow = Math.min(startRow + BATCH_SIZE - 1, lastRow - 1);
-          //   const range = `${String.fromCharCode(65 + paymentStatusIndex)}${startRow + 1}:${String.fromCharCode(65 + paymentStatusIndex)}${endRow + 1}`;
-            
-          //   await executeWithBackoff(async () => {
-          //     await sheet.loadCells(range);
-              
-          //     for (let i = startRow; i <= endRow; i++) {
-          //       const cell = sheet.getCell(i, paymentStatusIndex);
-          //       if (cell.value === 'Paid') {
-          //         cell.backgroundColor = { red: 0.7, green: 0.9, blue: 0.7 }; // Light green
-          //       } else if (cell.value === 'Pending') {
-          //         cell.backgroundColor = { red: 1, green: 0.9, blue: 0.6 }; // Light yellow
-          //       } else if (cell.value === 'Unpaid') {
-          //         cell.backgroundColor = { red: 0.9, green: 0.7, blue: 0.7 }; // Light red
-          //       }
-          //     }
-              
-          //     await sheet.saveUpdatedCells();
-          //   });
-            
-          //   console.log(`Formatted payment status for rows ${startRow+1}-${endRow+1} in ${eventName}`);
-            
-          //   // Add delay between formatting batches
-          //   if (startRow + BATCH_SIZE < lastRow) {
-          //     await new Promise(resolve => setTimeout(resolve, 1000));
-          //   }
-          // }
-          
-          console.log(`Sheet formatting completed for ${eventName}`);
-        } catch (error) {
-          console.error(`Error formatting sheet for ${eventName}:`, error);
+          try {
+            await executeWithBackoff(() => row.save());
+          } catch (error) {
+            console.error(`Failed to update row ${data['Order ID']}:`, error);
+          }
+        }));
+        
+        console.log(`Updated batch ${i / this.batchSize + 1} of ${Math.ceil(updates.length / this.batchSize)}`);
+        
+        // Small delay between batches to prevent quota issues
+        if (i + this.batchSize < updates.length) {
+          await new Promise(resolve => setTimeout(resolve, 1000));
         }
       }
       
-      console.log('Sync completed successfully for all events');
+      // Add new rows in batches
+      for (let i = 0; i < newRows.length; i += this.batchSize) {
+        const batch = newRows.slice(i, i + this.batchSize);
+        try {
+          await executeWithBackoff(() => sheet.addRows(batch));
+          console.log(`Added batch ${i / this.batchSize + 1} of ${Math.ceil(newRows.length / this.batchSize)}`);
+        } catch (error) {
+          console.error('Failed to add batch of rows:', error);
+          
+          // Fall back to adding one by one if batch fails
+          for (const row of batch) {
+            try {
+              await executeWithBackoff(() => sheet.addRow(row));
+              console.log(`Added row for order ${row['Order ID']}`);
+            } catch (rowError) {
+              console.error(`Failed to add row ${row['Order ID']}:`, rowError);
+            }
+            
+            // Add a small delay between individual row additions
+            await new Promise(resolve => setTimeout(resolve, 200));
+          }
+        }
+        
+        // Small delay between batches
+        if (i + this.batchSize < newRows.length) {
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+      }
+      
+      console.log('Orders sync completed successfully');
       return true;
     } catch (error) {
-      console.error('Error in syncToSheets:', error);
+      console.error('Error in syncOrdersToSheets:', error);
       throw new Error(`Sync failed: ${error.message}`);
     }
   }
@@ -345,80 +243,6 @@ class GoogleSheetsService {
     clearCache(); // Clear the sheetUtils cache as well
     console.log('Google Sheets connection reset');
   }
-}
-
-async function getOrCreateEventSheet(doc, eventName) {
-  return await executeWithBackoff(async () => {
-    try {
-      // Ensure eventName is not undefined or empty
-      if (!eventName) {
-        throw new Error('Event name is required');
-      }
-
-      // Clean the event name to make it sheet-friendly
-      const sheetName = eventName
-        .trim()
-        .replace(/[^\w\s-]/g, '') // Remove special characters except spaces and hyphens
-        .substring(0, 100); // Sheets have a length limit
-
-      // Load all sheets
-      await doc.loadInfo();
-      
-      // Try to find existing sheet
-      let sheet = doc.sheetsByTitle[sheetName];
-      
-      // If sheet doesn't exist, create it
-      if (!sheet) {
-        console.log(`Creating new sheet for event: ${sheetName}`);
-        sheet = await doc.addSheet({
-          title: sheetName,
-          headerValues: [
-            'Registration ID',
-            'Name',
-            'Email',
-            'Phone',
-            'Payment Date',     // Changed from 'Registration Date'
-            'Payment Status',
-            'Payment ID',
-            'Payment Type',
-            'Amount (₹)',
-            'Team Name',        // Added
-            'Team UID',
-            'Team Role'         // Added
-          ]
-        });
-        
-        await sheet.setHeaderRow([
-          'Registration ID',
-          'Name',
-          'Email',
-          'Phone',
-          'Payment Date',
-          'Payment Status',
-          'Payment ID',
-          'Payment Type',
-          'Amount (₹)',
-          'Team Name',
-          'Team UID',
-          'Team Role'
-        ]);
-
-        // Format header row - update range to include new column
-        await sheet.loadCells('A1:K1');
-        for (let i = 0; i < sheet.headerValues.length; i++) {
-          const cell = sheet.getCell(0, i);
-          cell.textFormat = { bold: true };
-          cell.backgroundColor = { red: 0.8, green: 0.8, blue: 0.8 };
-        }
-        await sheet.saveUpdatedCells();
-      }
-
-      return sheet;
-    } catch (error) {
-      console.error('Error in getOrCreateEventSheet:', error);
-      throw new Error(`Failed to get or create sheet: ${error.message}`);
-    }
-  });
 }
 
 module.exports = new GoogleSheetsService();

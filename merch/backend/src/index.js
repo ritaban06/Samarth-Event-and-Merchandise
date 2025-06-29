@@ -110,6 +110,11 @@ app.get("/api/payment/:paymentId", async(req, res) => {
 // Google Sheets Authentication
 const authenticateGoogleSheets = async () => {
   try {
+    if (!process.env.GOOGLE_CREDENTIALS || !process.env.GOOGLE_SHEET_ID) {
+      console.warn('Google Sheets credentials not configured. Sheets sync will not be available.');
+      return;
+    }
+    
     const googleCredentials = JSON.parse(process.env.GOOGLE_CREDENTIALS);
     const doc = new GoogleSpreadsheet(process.env.GOOGLE_SHEET_ID);
     
@@ -120,7 +125,8 @@ const authenticateGoogleSheets = async () => {
     await doc.loadInfo();
     console.log('Google Sheets connected:', doc.title);
   } catch (error) {
-    console.error('Google Sheets authentication error:', error);
+    console.error('Google Sheets authentication error:', error.message);
+    console.warn('Google Sheets sync functionality may not work properly.');
   }
 };
  
