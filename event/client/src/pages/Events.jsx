@@ -9,7 +9,7 @@ import { motion } from "framer-motion";
 import Packages from "./Packages";
 
 const API_URL = import.meta.env.VITE_API_URL;
-const RPG_ID = import.meta.env.SECRET_RPG_ID;
+const RPG_ID = import.meta.env.RPG_ID;
 //("url:",API_URL);
 
 

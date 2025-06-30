@@ -7,7 +7,7 @@ import Loader from '../components/Loader';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, MenuItem, Snackbar } from '@mui/material';
 
 const API_URL = import.meta.env.VITE_API_URL;
-const RPG_ID = import.meta.env.VITE_RPG_ID;
+const RPG_ID = import.meta.env.RPG_ID;
 
 const Packages = () => {
   const [packages, setPackages] = useState([]);
