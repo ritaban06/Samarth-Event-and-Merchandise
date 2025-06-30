@@ -7,7 +7,18 @@ import Loader from '../components/Loader';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, MenuItem, Snackbar } from '@mui/material';
 
 const API_URL = import.meta.env.VITE_API_URL;
-const RPG_ID = import.meta.env.RPG_ID;
+const RPG_ID = import.meta.env.VITE_RPG_ID;
+
+// Validate critical environment variables
+if (!RPG_ID) {
+  console.error('CRITICAL ERROR: Razorpay Key ID is missing for Packages!');
+  console.error('Make sure VITE_RPG_ID is set in your .env file');
+}
+
+if (!API_URL) {
+  console.error('CRITICAL ERROR: API URL is missing!');
+  console.error('Make sure VITE_API_URL is set in your .env file');
+}
 
 const Packages = () => {
   const [packages, setPackages] = useState([]);
@@ -77,6 +88,11 @@ const Packages = () => {
       setIsProcessing(true);
 
       if (paymentType === 'online') {
+        // Validate Razorpay key before proceeding
+        if (!RPG_ID) {
+          throw new Error('Payment system configuration error. Please contact support.');
+        }
+
         const scriptLoaded = await loadRazorpayScript();
         if (!scriptLoaded) {
           throw new Error('Razorpay SDK failed to load');
