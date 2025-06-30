@@ -9,8 +9,20 @@ import { motion } from "framer-motion";
 import Packages from "./Packages";
 
 const API_URL = import.meta.env.VITE_API_URL;
-const RPG_ID = import.meta.env.RPG_ID;
+const RPG_ID = import.meta.env.VITE_RPG_ID;
 //("url:",API_URL);
+//("RPG_ID:",RPG_ID); // Add this to debug
+
+// Validate critical environment variables
+if (!RPG_ID) {
+  console.error('CRITICAL ERROR: Razorpay Key ID is missing!');
+  console.error('Make sure VITE_RPG_ID is set in your .env file');
+}
+
+if (!API_URL) {
+  console.error('CRITICAL ERROR: API URL is missing!');
+  console.error('Make sure VITE_API_URL is set in your .env file');
+}
 
 
 const getDefaultRegistrationData = () => ({
@@ -199,6 +211,16 @@ const Events = () => {
 
   const handleRazorpayScreen = async (amount, orderId) => {
     try {
+      // Validate Razorpay key before proceeding
+      if (!RPG_ID) {
+        setSnackbar({
+          open: true,
+          message: 'Payment system configuration error. Please contact support.',
+          severity: 'error'
+        });
+        return false;
+      }
+
       const res = await loadRazorpayScript();
   
       if (!res) {
