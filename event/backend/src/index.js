@@ -16,10 +16,21 @@ const doc = new GoogleSpreadsheet(process.env.GOOGLE_SHEET_ID);
 
 // Initialize Razorpay
 const Razorpay = require('razorpay');
+
+// Validate Razorpay credentials
+if (!process.env.RPG_ID || !process.env.RPG_SECRET) {
+    console.error('ERROR: Razorpay credentials missing!');
+    console.error('RPG_ID:', process.env.RPG_ID ? 'Present' : 'MISSING');
+    console.error('RPG_SECRET:', process.env.RPG_SECRET ? 'Present' : 'MISSING');
+    process.exit(1); // Exit if critical payment credentials are missing
+}
+
 const razorpay = new Razorpay({
-    key_id: process.env.RPG_ID || "",
-    key_secret: process.env.RPG_SECRET || ""
+    key_id: process.env.RPG_ID,
+    key_secret: process.env.RPG_SECRET
 });
+
+console.log('Razorpay initialized with key:', process.env.RPG_ID);
 
 // Middleware
 app.use(cors({
@@ -62,6 +73,15 @@ app.get('/', (req, res) => {
 // Payment Routes
 app.post('/api/orders', async(req, res) => {
   try {
+    // Validate that Razorpay is properly initialized
+    if (!razorpay) {
+      console.error('Razorpay not initialized');
+      return res.status(500).json({ 
+        message: 'Payment service unavailable',
+        error: 'Razorpay not properly configured'
+      });
+    }
+
     const options = {
         amount: req.body.amount,
         currency: req.body.currency || 'INR',
@@ -69,7 +89,9 @@ app.post('/api/orders', async(req, res) => {
         payment_capture: 1
     };
 
+    console.log('Creating Razorpay order with options:', options);
     const response = await razorpay.orders.create(options);
+    console.log('Razorpay order created successfully:', response.id);
 
     res.json({
         order_id: response.id,
