@@ -59,7 +59,12 @@ const Merch = () => {
           Authorization: `Bearer ${localStorage.getItem('adminToken')}`,
         },
       });
-      setProducts(response.data);
+      // Map 'name' to 'productName' for compatibility with UI
+      const mappedProducts = response.data.map((product) => ({
+        ...product,
+        productName: product.productName || product.name || '',
+      }));
+      setProducts(mappedProducts);
     } catch (error) {
       console.error('Error fetching products:', error);
     }
