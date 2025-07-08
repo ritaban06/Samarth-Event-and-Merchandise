@@ -130,10 +130,21 @@ const Merch = () => {
         return;
       }
 
-      const dataToSend = { 
-        ...formData,
-        imageUrls: formData.imageUrls.filter(url => url.trim() !== ''),
+      // Map UI fields to backend fields and only include backend fields
+      const dataToSend = {
+        name: formData.productName,
+        description: formData.description,
+        price: formData.price,
+        discountPrice: formData.discountPrice,
+        images: formData.imageUrls.filter(url => url.trim() !== ''),
+        category: formData.category,
+        variants: formData.variants || [],
         isActive: isEditing ? formData.isActive : false,
+        featured: formData.featured,
+        tags: formData.tags,
+        stock: formData.stock,
+        sizes: formData.sizes,
+        colors: formData.colors,
       };
 
       console.log('Data being sent to the backend');
