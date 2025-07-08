@@ -135,6 +135,7 @@ const Products = () => {
           >
             <ProductCard
               {...product}
+              imageUrl={product.imageUrls ? product.imageUrls[0] : (product.images ? product.images[0] : '')}
               onAddToCart={handleAddToCart}
             />
           </motion.div>
