@@ -59,10 +59,11 @@ const Merch = () => {
           Authorization: `Bearer ${localStorage.getItem('adminToken')}`,
         },
       });
-      // Map 'name' to 'productName' for compatibility with UI
+      // Map 'name' to 'productName' and 'images' to 'imageUrls' for compatibility with UI
       const mappedProducts = response.data.map((product) => ({
         ...product,
         productName: product.productName || product.name || '',
+        imageUrls: product.imageUrls || product.images || [''],
       }));
       setProducts(mappedProducts);
     } catch (error) {
