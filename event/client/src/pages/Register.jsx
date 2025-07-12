@@ -1,8 +1,7 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
-import samarthLogo from "../images/samarth_logo_white.png";
+import samarthLogo from "../images/samarth_logo_white.webp";
 import axios from "axios";
 
 const Register = () => {
@@ -74,9 +73,7 @@ const Register = () => {
 
 
   return (
-    <motion.div 
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
+    <div 
       className="fixed inset-0 w-full h-full bg-gradient-to-br from-purple-950 via-purple-900 to-slate-900 overflow-y-auto"
     >
       {/* Background effects */}
@@ -85,36 +82,30 @@ const Register = () => {
       
       {/* Content container */}
       <div className="min-h-screen w-full flex items-center justify-center p-4 sm:p-6 md:p-8">
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
+        <div 
           className="w-full max-w-6xl bg-black/30 backdrop-blur-xl rounded-3xl shadow-2xl border border-purple-500/20 overflow-hidden"
         >
           <div className="flex flex-col md:flex-row">
             {/* Left Section - Only visible on md and up */}
             <div className="hidden md:flex md:w-1/2 flex-col justify-between p-6 lg:p-8 bg-gradient-to-br from-purple-900/50 to-transparent">
               {/* Logo and title */}
-              <motion.div
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
+              <div
                 className="relative flex flex-col items-center"
               >
                 <Link to="/" className="block">
-                  <motion.h1 
+                  <h1 
                     className="text-4xl lg:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-300 via-pink-400 to-purple-300 tracking-tight"
-                    animate={{ backgroundPosition: ['0%', '100%', '0%'] }}
-                    transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
                   >
                     SAFALYA
-                  </motion.h1>
+                  </h1>
                 </Link>
                 <img 
+                  loading="lazy"
                   src={samarthLogo} 
                   alt="Safalya Logo" 
                   className="mx-auto w-48 md:w-64 lg:w-96 drop-shadow-2xl relative z-10" 
                 />
-              </motion.div>
+              </div>
             </div>
 
             {/* Right Section for Registration Form */}
@@ -181,9 +172,7 @@ const Register = () => {
                     I agree to the <Link to="/terms" className="text-purple-500">Terms & Conditions</Link>
                   </label>
                 </div>
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+                <button
                   disabled={loading}
                   className="w-full bg-gradient-to-r from-purple-600 to-purple-800 text-white py-3 rounded-xl font-semibold shadow-lg hover:shadow-purple-500/20 transition-all duration-300 disabled:opacity-50"
                 >
@@ -194,17 +183,17 @@ const Register = () => {
                   ) : (
                     "Register"
                   )}
-                </motion.button>
+                </button>
               </form>
               <p className="text-sm text-purple-200/60 text-center mt-4">
                 Already have an account? <Link to="/login" className="text-purple-500">Log in</Link>
               </p>
             </div>
           </div>
-        </motion.div>
+        </div>
       </div>
-    </motion.div>
+    </div>
   );
 };
 
-export default Register; 
+export default Register;

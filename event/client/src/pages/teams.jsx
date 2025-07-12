@@ -1,18 +1,18 @@
 import React from "react";
 import '../grad.css';
 
-import ab from '../images/Pravidhi_AB.png';
-import pm from '../images/Pravidhi_PM.jpeg';
-import sd from '../images/Pravidhi_SD.jpeg';
-import ks from '../images/Pravidhi_KS.jpg';
-import rs from '../images/Pravidhi_RG.jpg';
-import ar from '../images/Pravidhi_AR.jpg';
-import arc from '../images/Pravidhi_ARC.jpg';
-import db from '../images/Pravidhi_DB.jpg';
-import sda from '../images/Pravidhi_SDas.jpg';
-import sm from '../images/Pravidhi_SM.jpg';
-import ss from '../images/Pravidhi_SS.jpg';
-import sdutta from '../images/Pravidhi_SDutta.jpg';
+import ab from '../images/Pravidhi_AB.webp';
+import pm from '../images/Pravidhi_PM.webp';
+import sd from '../images/Pravidhi_SD.webp';
+import ks from '../images/Pravidhi_KS.webp';
+import rs from '../images/Pravidhi_RG.webp';
+import ar from '../images/Pravidhi_AR.webp';
+import arc from '../images/Pravidhi_ARC.webp';
+import db from '../images/Pravidhi_DB.webp';
+import sda from '../images/Pravidhi_SDas.webp';
+import sm from '../images/Pravidhi_SM.webp';
+import ss from '../images/Pravidhi_SS.webp';
+import sdutta from '../images/Pravidhi_SDutta.webp';
 
 
 const Team = () => {
@@ -26,9 +26,9 @@ const Team = () => {
                 Team Pravidhi
               </span>
               <h2 className="mb-3 text-3xl font-bold leading-[1.2] gradient-text sm:text-4xl md:text-[40px]">
-              🧙‍♂️ Meet The Wizards!</h2>
+              🚀 Meet The Team!</h2>
               <p className="text-base text-body-color dark:text-dark-6">
-              A group of talented individuals brewing innovation and casting spells of creativity. Together, they are working tirelessly to bring magic to life.
+              A group of talented individuals driving innovation and creating solutions with creativity. Together, they are working tirelessly to bring excellence to life.
               </p>
             </div>
           </div>
@@ -118,7 +118,7 @@ const TeamCard = ({ imageSrc, name, profession }) => {
       <div className="w-full px-4 md:w-1/2 xl:w-1/4">
         <div className="mx-auto mb-10 w-72 max-w-[370px]">
           <div className="relative overflow-hidden rounded-lg">
-            <img src={imageSrc} alt="" className="w-full" />
+            <img loading="lazy" src={imageSrc} alt="" className="w-full" />
             <div className="absolute bottom-5 left-0 w-full text-center">
               <div className="relative mx-5 overflow-hidden rounded-lg bg-gradient-to-br from-blue-950 to-slate-900 px-3 py-5 dark:bg-dark-2">
                 <h3 className="text-base font-semibold text-dark dark:text-yellow-400">

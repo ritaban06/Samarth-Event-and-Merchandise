@@ -1,15 +1,26 @@
 @keyframes gradientMove {
     0% { background-position: 0% 50%; }
-    100% { background-position: 200% 50%; }
-  }
-  
-  .gradient-text {
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+.gradient-text {
     display: inline-block;
-    background-image: linear-gradient(to right, #FFD700, #FFFFFF, #FFD700);
-    background-size: 200% auto;
+    background-image: linear-gradient(45deg, #3B82F6, #60A5FA, #F59E0B, #FCD34D, #3B82F6);
+    background-size: 300% auto;
     background-clip: text;
     -webkit-background-clip: text;
     color: transparent;
-    animation: gradientMove 3s linear infinite;
-  }
+    animation: gradientMove 4s ease-in-out infinite;
+}
+
+.gradient-text-secondary {
+    display: inline-block;
+    background-image: linear-gradient(45deg, #F59E0B, #FCD34D, #3B82F6, #60A5FA, #F59E0B);
+    background-size: 300% auto;
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    animation: gradientMove 4s ease-in-out infinite;
+}
   

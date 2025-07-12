@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from "react";
-import { motion } from "framer-motion";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 import axios from "axios";
@@ -119,9 +118,7 @@ const OtpVerification = ({ setIsLoggedIn }) => {
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
+    <div
       className="fixed inset-0 w-full h-full bg-gradient-to-br from-purple-950 via-purple-900 to-slate-900 flex items-center justify-center"
     >
       <div className="max-w-md w-full bg-black/30 backdrop-blur-xl p-6 rounded-3xl shadow-lg">
@@ -164,7 +161,7 @@ const OtpVerification = ({ setIsLoggedIn }) => {
           </button>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 };
 
