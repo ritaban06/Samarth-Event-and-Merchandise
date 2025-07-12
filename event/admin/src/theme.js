@@ -4,34 +4,37 @@ const theme = createTheme({
   palette: {
     mode: 'dark',
     primary: {
-      main: '#90caf9',  // Lighter blue for dark mode
-      dark: '#42a5f5',
+      main: '#3B82F6',  // Modern blue
+      dark: '#1E40AF',
+      light: '#60A5FA',
     },
     secondary: {
-      main: '#f48fb1',  // Lighter pink for dark mode
+      main: '#F59E0B',  // Modern amber
+      dark: '#D97706',
+      light: '#FCD34D',
     },
     background: {
-      default: '#0a1929',  // Dark blue-grey
-      paper: '#1a2027',    // Slightly lighter blue-grey
+      default: '#0F172A',  // Dark slate
+      paper: '#1E293B',    // Slightly lighter slate
     },
     text: {
       primary: '#fff',
-      secondary: 'rgba(255, 255, 255, 0.7)',
+      secondary: 'rgba(255, 255, 255, 0.8)',
     },
   },
   components: {
     MuiAppBar: {
       styleOverrides: {
         root: {
-          backgroundColor: '#1a2027',
+          backgroundColor: '#1E293B',
         },
       },
     },
     MuiDrawer: {
       styleOverrides: {
         paper: {
-          backgroundColor: '#1a2027',
-          borderRight: '1px solid rgba(255, 255, 255, 0.12)',
+          backgroundColor: '#1E293B',
+          borderRight: '1px solid rgba(59, 130, 246, 0.2)',
         },
       },
     },
@@ -39,6 +42,7 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           textTransform: 'none',
+          borderRadius: '8px',
         },
       },
     },
@@ -47,10 +51,13 @@ const theme = createTheme({
         root: {
           '& .MuiOutlinedInput-root': {
             '& fieldset': {
-              borderColor: 'rgba(255, 255, 255, 0.23)',
+              borderColor: 'rgba(59, 130, 246, 0.3)',
             },
             '&:hover fieldset': {
-              borderColor: 'rgba(255, 255, 255, 0.4)',
+              borderColor: 'rgba(59, 130, 246, 0.5)',
+            },
+            '&.Mui-focused fieldset': {
+              borderColor: '#3B82F6',
             },
           },
         },
