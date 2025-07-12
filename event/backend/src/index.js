@@ -47,15 +47,17 @@ app.use(cors({
 
 app.use(express.json()); // Parse JSON request body
 
+mongoose.set('bufferCommands', false);
+
 // MongoDB Connection
 mongoose.connect(process.env.MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
+  useNewUrlParser: true,
+  useUnifiedTopology: true
 })
 .then(() => {
-    // Parse cluster/host name from MONGO_URI
-    const hostName = process.env.MONGO_URI.split('@')[1].split('/')[0];
-    console.log(`MongoDB Connected successfully to database: ${hostName}`);
+  // Parse cluster/host name from MONGO_URI
+  const hostName = process.env.MONGO_URI.split('@')[1].split('/')[0];
+  console.log(`MongoDB Connected successfully to database: ${hostName}`);
 })
 .catch(err => console.error('MongoDB Connection Error:', err));
 
