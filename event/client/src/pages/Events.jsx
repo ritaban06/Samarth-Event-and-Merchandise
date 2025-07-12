@@ -5,24 +5,11 @@ import { Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, S
 import { useNavigate } from "react-router-dom";
 import EventCard from "./EventCard";
 import Loader from "../components/Loader";
-import { motion } from "framer-motion";
 import Packages from "./Packages";
 
 const API_URL = import.meta.env.VITE_API_URL;
 const RPG_ID = import.meta.env.VITE_RPG_ID;
 //("url:",API_URL);
-//("RPG_ID:",RPG_ID); // Add this to debug
-
-// Validate critical environment variables
-if (!RPG_ID) {
-  console.error('CRITICAL ERROR: Razorpay Key ID is missing!');
-  console.error('Make sure VITE_RPG_ID is set in your .env file');
-}
-
-if (!API_URL) {
-  console.error('CRITICAL ERROR: API URL is missing!');
-  console.error('Make sure VITE_API_URL is set in your .env file');
-}
 
 
 const getDefaultRegistrationData = () => ({
@@ -46,7 +33,6 @@ const Events = () => {
   const navigate = useNavigate();
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [particles, setParticles] = useState([]);
   const [error, setError] = useState(null);
   const [openRegisterModal, setOpenRegisterModal] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
@@ -67,18 +53,6 @@ const Events = () => {
       setRegistrationData(getDefaultRegistrationData());
     }
   }, [user]);
-
-  useEffect(() => {
-    // Generate random floating particles (like magical sparks)
-    const newParticles = Array.from({ length: 25 }).map(() => ({
-      id: Math.random(),
-      top: Math.random() * 100 + "%",
-      left: Math.random() * 100 + "%",
-      size: Math.random() * 4 + 2 + "px",
-      delay: Math.random() * 5 + "s",
-    }));
-    setParticles(newParticles);
-  }, []);
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -211,16 +185,6 @@ const Events = () => {
 
   const handleRazorpayScreen = async (amount, orderId) => {
     try {
-      // Validate Razorpay key before proceeding
-      if (!RPG_ID) {
-        setSnackbar({
-          open: true,
-          message: 'Payment system configuration error. Please contact support.',
-          severity: 'error'
-        });
-        return false;
-      }
-
       const res = await loadRazorpayScript();
   
       if (!res) {
@@ -616,29 +580,21 @@ const Events = () => {
       </header>
       <Packages/>
       <header className="relative text-center py-10 flex flex-col items-center mt-12">
-      <h1 className="m-3 pt-1 pb-3 text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-purple-300">
-          🧙‍♂️ Magical Events at Hogwarts
+      <h1 className="m-3 pt-1 pb-3 text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-amber-400">
+          🎯 Events at Safalya
         </h1>
         <p className="max-w-2xl text-center text-gray-300 text-lg mb-4">
-          Discover enchanting events and immerse yourself in a world of magic and mystery. Register now and let the magic begin! ✨🪄
+          Discover innovative events and immerse yourself in a world of learning and growth. Register now and let the journey begin! 🚀✨
         </p>
-        <div className="h-1 w-32 bg-yellow-400 rounded-full mb-6 justify-center items-center"></div>
+        <div className="h-1 w-32 bg-amber-400 rounded-full mb-6 justify-center items-center"></div>
       </header>
 
-      {loading ? (
-        <Loader />
-      ) : error ? (
+      {events.length === 0 ? (
         <div className="text-center text-gray-300">
-          <p>{error}</p>
+          <p>No events available at the moment. Check back later for more exciting events!</p>
         </div>
-      ) : events && events.length === 0 ? (
-        <div className="text-center text-gray-300">
-          <p>No events available at the moment. Check back later for more magical happenings!</p>
-        </div>
-      ) : events && Array.isArray(events) ? (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
+      ) : (
+        <div
           className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mt-10 max-w-7xl"
         >
           {events.map((event) => (
@@ -649,8 +605,8 @@ const Events = () => {
               user={user}
             />
           ))}
-        </motion.div>
-      ) : null}
+        </div>
+      )}
       <Dialog 
         open={openRegisterModal} 
         onClose={handleRegisterClose} 

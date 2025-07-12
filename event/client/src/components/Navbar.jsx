@@ -2,8 +2,8 @@ import PropTypes from 'prop-types';
 import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { FiMenu, FiX, FiUser, FiUsers } from "react-icons/fi";
-import GlowButton from "./GlowButton";
-import samarthLogo from "../images/samarth_logo_white.png";
+// import GlowButton from "./GlowButton";
+import samarthLogo from "../images/samarth_logo_white.webp";
 
 export default function Navbar({ isLoggedIn, setIsLoggedIn }) {
   const navigate = useNavigate();
@@ -26,7 +26,7 @@ export default function Navbar({ isLoggedIn, setIsLoggedIn }) {
     <nav className="fixed top-0 left-0 w-full z-50 bg-blue-950/50 border-b border-white/20 filter backdrop-blur-sm">
       <div className="container mx-auto px-6 py-4 flex justify-between items-center">
         <Link to="/" className="flex items-center">
-          <img src={samarthLogo} alt="Logo" className="h-12" />
+          <img loading="lazy" src={samarthLogo} alt="Logo" className="h-12" />
           <h1 className="text-2xl font-bold text-white">SAMARTH</h1>
         </Link>
 
@@ -76,7 +76,7 @@ export default function Navbar({ isLoggedIn, setIsLoggedIn }) {
           ) : (
             <li>
               <Link to="/login" className="block text-white hover:text-gray-300 transition py-2 md:py-0">
-                <GlowButton text="Login"/>
+                Login
               </Link>
             </li>
             

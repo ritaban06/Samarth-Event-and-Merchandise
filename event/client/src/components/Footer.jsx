@@ -1,5 +1,5 @@
 import React from "react";
-import logo from "../images/samarth_logo_white.png";
+import logo from "../images/samarth_logo_white.webp";
 import logo2 from "../images/samarth_logo_colour.webp";
 import PravidhiLogo from '../images/PravidhiLogo.webp';
 import TiLogo from '../images/ti_logo.webp';
@@ -29,11 +29,11 @@ const Footer = () => {
   };
 
   return (
-    <div className="relative bg-[#121212] flex flex-col backdrop-blur-lg border-t pt-8 md:pt-12 mt-16 border-[#A78BFA]">
-      {/* Hogwarts-inspired decorative top border */}
-      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#8B5CF6] via-[#DAA520] to-[#8B5CF6]"></div>
+    <div className="relative bg-[#121212] flex flex-col backdrop-blur-lg border-t pt-8 md:pt-12 mt-16 border-[#60A5FA]">
+      {/* Modern decorative top border */}
+      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#3B82F6] via-[#F59E0B] to-[#3B82F6]"></div>
       
-      {/* Floating magic particles
+      {/* Floating particles
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         {[...Array(12)].map((_, i) => (
           <div 
@@ -62,10 +62,10 @@ const Footer = () => {
         <div className="flex flex-col my-4 md:mx-6">
           <div className="glass rounded-lg p-6">
             <div className="flex flex-row items-center justify-center flex-wrap mb-6">
-              <img className="h-16 md:h-24 mx-2 md:mx-4 animate-float" loading="lazy" src={PravidhiLogo} alt="Pravidhi Logo" /> 
-              <div className="h-16 md:h-24 w-0 border border-[#DAA520] rounded-xl bg-[#DAA520]/30 mx-2 md:mx-4 animate-glow" />
+              <img className="h-16 md:h-24 mx-2 md:mx-4" loading="lazy" src={PravidhiLogo} alt="Pravidhi Logo" /> 
+              <div className="h-16 md:h-24 w-0 border border-[#DAA520] rounded-xl bg-[#DAA520]/30 mx-2 md:mx-4" />
               <div className="flex flex-row p-0 m-0 items-center">
-                <img className="h-16 md:h-24 animate-float" loading="lazy" src={logo2} alt="Samarth Logo" />
+                <img className="h-16 md:h-24" loading="lazy" src={logo2} alt="Samarth Logo" />
                 <img className="h-14 md:h-20" loading="lazy" src={TiLogo} alt="TI Logo" />
               </div>
             </div>
@@ -79,7 +79,7 @@ const Footer = () => {
                   <a 
                     key={index}
                     href={item.link} 
-                    className="text-white hover:text-[#DAA520] transition-all duration-300 ease-in transform hover:scale-110 hover:glow"
+                    className="text-white hover:text-[#DAA520] transition-all duration-300 ease-in"
                     aria-label="Social media link"
                   >
                     {item.icon}

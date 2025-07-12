@@ -95,7 +95,7 @@ const Profile = () => {
               location: event.venue || "TBA",
               status: paymentStatus,
               icon: getRandomEventIcon(),
-              description: event.description || "Join us for this magical event!",
+              description: event.description || "Join us for this exciting event!",
               imageUrl: event.imageUrl ? convertGoogleDriveUrl(event.imageUrl) : null,
               registrationDate: new Date(userRegistration?.registeredAt || event.createdAt).toLocaleDateString(),
               isPaid: event.payment?.status === 'paid',
@@ -132,7 +132,7 @@ const Profile = () => {
     if (imageUrl) {
       return (
         <div className="w-full h-32 overflow-hidden rounded-t-lg">
-          <img src={imageUrl} alt="Event" className="w-full h-full object-cover" />
+          <img loading="lazy" src={imageUrl} alt="Event" className="w-full h-full object-cover" />
         </div>
       );
     }
@@ -204,13 +204,13 @@ const Profile = () => {
     <div className="min-h-screen text-white font-sans px-4 md:px-6 pt-20 h-max">
       {/* Header Section */}
       <header className="relative py-8 px-4 flex flex-col items-center">
-        <h1 className="m-3 pt-1 pb-3 text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-purple-300">
-        🪄 Your Wizard Profile
+        <h1 className="m-3 pt-1 pb-3 text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-amber-400">
+        🎓 Your Profile
         </h1>
         <p className="max-w-2xl text-center text-gray-300 text-lg mb-4">
-        Unveil your wizarding legacy and showcase your magical prowess. Your journey through the enchanted realm begins here! ⚡📜
+        Welcome to your profile! Explore your achievements and showcase your potential. Your journey through the educational realm begins here! 🚀�
         </p>
-        <div className="h-1 w-32 bg-yellow-400 rounded-full mb-6"></div>
+        <div className="h-1 w-32 bg-amber-400 rounded-full mb-6"></div>
       </header>
 
       {profileData ? (
@@ -409,7 +409,7 @@ const Profile = () => {
                       <div className="text-center py-12">
                         <div className="text-5xl mb-4">✨</div>
                         <p className="text-xl text-yellow-300 font-bold mb-2">No Events Found</p>
-                        <p className="text-purple-100">You haven't registered for any magical events yet.</p>
+                        <p className="text-blue-100">You haven't registered for any events yet.</p>
                         <a href="/events"><button className="mt-6 bg-gradient-to-r from-purple-600 to-purple-800 text-white font-bold rounded-full px-6 py-3 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/30 hover:scale-105">Browse Events</button></a>
                       </div>
                     )
@@ -486,7 +486,7 @@ const Profile = () => {
           <div className="bg-purple-800/30 backdrop-blur-sm p-8 rounded-xl border border-purple-700/50 text-center">
             <div className="text-5xl mb-4">✨</div>
             <p className="text-xl text-yellow-300 font-bold mb-2">No Profile Found</p>
-            <p className="text-purple-100">Your magical profile seems to be hidden right now.</p>
+            <p className="text-blue-100">Your profile seems to be hidden right now.</p>
           </div>
         </div>
       )}
