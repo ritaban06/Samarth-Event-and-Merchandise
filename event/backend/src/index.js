@@ -8,6 +8,9 @@ const authRoutes = require('./routes/authRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const packageRoutes = require('./routes/packageRoutes');
 
+// Start cron job for automatic Google Sheets sync
+require('./cron/syncSheetsCron');
+
 const app = express();
 const PORT = process.env.PORT || 5000;
 
