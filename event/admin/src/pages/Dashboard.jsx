@@ -61,19 +61,20 @@ export default function Dashboard() {
 
   const fetchEvents = async () => {
     try {
-      setLoading(true)
+      setLoading(true);
       const response = await axios.get(`${API_URL}/events`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
         }
-      })
-      setEvents(response.data)
-      setError(null)
+      });
+      setEvents(Array.isArray(response.data) ? response.data : []);
+      setError(null);
     } catch (error) {
-      console.error('Error fetching events:', error)
-      setError('Coming Soon !')
+      console.error('Error fetching events:', error);
+      setError('Coming Soon !');
+      setEvents([]); // Ensure events is always an array
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
