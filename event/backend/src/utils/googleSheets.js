@@ -104,9 +104,7 @@ class GoogleSheetsService {
     try {
       console.log('Starting sync process...');
       await this.init();
-      
-      // Updated headers to include all required fields
-      
+
       // Group registrations by event name
       const registrationsByEvent = {};
       registrations.forEach(reg => {
@@ -115,51 +113,56 @@ class GoogleSheetsService {
         }
         registrationsByEvent[reg.eventName].push(reg);
       });
-      
+
       console.log(`Found ${Object.keys(registrationsByEvent).length} events to sync`);
-      
+
       // Process each event separately
       for (const eventName of Object.keys(registrationsByEvent)) {
         const eventRegs = registrationsByEvent[eventName];
         console.log(`Processing ${eventRegs.length} registrations for event: ${eventName}`);
 
-      const event = await Event.findOne({ eventName });
-      if (!event) {
-        console.error(`Event not found in database: ${eventName}`);
-        continue;
-      }
+        const event = await Event.findOne({ eventName });
+        if (!event) {
+          console.error(`Event not found in database: ${eventName}`);
+          continue;
+        }
 
-      // Get additional field names from the event model
-      const additionalFieldNames = event.additionalFields?.map(field => field.name) || [];
-      
-      // Create headers including additional fields
-      const headers = [
-        'Registration ID',
-        'Student Name',
-        'Email',
-        'Event Name',
-        'Payment Status',
-        'Payment ID',
-        'Payment Type',
-        'Payment Date',
-        'Amount (₹)',
-        'Team Name',
-        'Team UID',
-        'Team Role',
-        ...additionalFieldNames
-      ];
-        
+        // Get additional field names from the event model
+        const additionalFieldNames = event.additionalFields?.map(field => field.name) || [];
+
         // Get or create a sheet for this event
         const sheet = await getOrCreateEventSheet(this.doc, eventName);
-        
-        // Ensure headers are set correctly
-        try {
-          await executeWithBackoff(() => sheet.setHeaderRow(headers));
-          console.log(`Headers set for ${eventName} sheet`);
-        } catch (headerError) {
-          console.error(`Error setting headers for ${eventName}:`, headerError);
+
+        // Read current headers from the sheet
+        let currentHeaders = sheet.headerValues || [];
+        if (!currentHeaders || currentHeaders.length === 0) {
+          // If sheet is newly created, set headers
+          const defaultHeaders = [
+            'Registration ID',
+            'Student Name',
+            'Email',
+            'Event Name',
+            'Payment Status',
+            'Payment ID',
+            'Payment Type',
+            'Payment Date',
+            'Amount (₹)',
+            'Team Name',
+            'Team UID',
+            'Team Role'
+          ];
+          currentHeaders = [...defaultHeaders, ...additionalFieldNames];
+          await executeWithBackoff(() => sheet.setHeaderRow(currentHeaders));
+          console.log(`Headers set for ${eventName} sheet (new sheet)`);
+        } else {
+          // Merge additional fields into current headers if not present
+          additionalFieldNames.forEach(field => {
+            if (!currentHeaders.includes(field)) {
+              currentHeaders.push(field);
+            }
+          });
         }
-        
+
         // Get existing rows for this event's sheet
         let existingRows;
         try {
@@ -169,46 +172,49 @@ class GoogleSheetsService {
           console.error(`Error fetching existing rows for ${eventName}:`, error);
           existingRows = [];
         }
-        
+
         // Create a map of existing registrations by registrationId
         const existingRegistrations = new Map(
           existingRows.map(row => [row['Registration ID'], row])
         );
-        
+
         // Prepare updates in batches
         const updates = [];
         const newRows = [];
         
         for (const reg of eventRegs) {
-          const rowData = {
-            'Registration ID': reg.uid || '',
-            'Student Name': reg.name || '',
-            'Email': reg.email || '',
-            'Event Name': reg.eventName || '',
-            'Payment Status': reg.payment?.status === 'paid' ? 'Paid' : 
-                            reg.payment?.status === 'pending' ? 'Pending' : 
-                            reg.payment?.status === 'package' ? 'Package' : 'Unpaid',
-            'Payment ID': reg.payment?.payment_id || 'N/A',
-            'Payment Type': reg.payment?.type || 'N/A',
-            'Payment Date': this.formatDate(reg.payment?.date || reg.registrationDate),
-            'Amount (₹)': this.formatAmount(reg.payment?.amount || reg.amount),
-            'Team Name': reg.team?.teamName || 'N/A',
-            'Team UID': reg.team?.teamuid || 'N/A',
-            'Team Role': reg.team? reg.team.teamLeader? 'Leader' : 'Member' : 'N/A'
-          };
+          // Fill all columns in the sheet, but never erase custom columns
+          const rowData = {};
+          currentHeaders.forEach(header => {
+            switch (header) {
+              case 'Registration ID': rowData[header] = reg.uid || ''; break;
+              case 'Student Name': rowData[header] = reg.name || ''; break;
+              case 'Email': rowData[header] = reg.email || ''; break;
+              case 'Event Name': rowData[header] = reg.eventName || ''; break;
+              case 'Payment Status':
+                rowData[header] = reg.payment?.status === 'paid' ? 'Paid' :
+                  reg.payment?.status === 'pending' ? 'Pending' :
+                  reg.payment?.status === 'package' ? 'Package' : 'Unpaid';
+                break;
+              case 'Payment ID': rowData[header] = reg.payment?.payment_id || 'N/A'; break;
+              case 'Payment Type': rowData[header] = reg.payment?.type || 'N/A'; break;
+              case 'Payment Date': rowData[header] = this.formatDate(reg.payment?.date || reg.registrationDate); break;
+              case 'Amount (₹)': rowData[header] = this.formatAmount(reg.payment?.amount || reg.amount); break;
+              case 'Team Name': rowData[header] = reg.team?.teamName || 'N/A'; break;
+              case 'Team UID': rowData[header] = reg.team?.teamuid || 'N/A'; break;
+              case 'Team Role': rowData[header] = reg.team ? (reg.team.teamLeader ? 'Leader' : 'Member') : 'N/A'; break;
+              default:
+                // Fill additional/custom columns
+                if (reg.additionalDetails instanceof Map) {
+                  rowData[header] = reg.additionalDetails.get(header) || '';
+                } else if (typeof reg.additionalDetails === 'object' && reg.additionalDetails !== null) {
+                  rowData[header] = reg.additionalDetails[header] || '';
+                } else {
+                  rowData[header] = '';
+                }
+            }
+          });
 
-          if (reg.additionalDetails instanceof Map) {
-            // If additionalDetails is a Map object
-            additionalFieldNames.forEach(fieldName => {
-              rowData[fieldName] = reg.additionalDetails.get(fieldName) || '';
-            });
-          } else if (typeof reg.additionalDetails === 'object' && reg.additionalDetails !== null) {
-            // If additionalDetails is a regular object
-            additionalFieldNames.forEach(fieldName => {
-              rowData[fieldName] = reg.additionalDetails[fieldName] || '';
-            });
-          }
-          
           const existingRow = existingRegistrations.get(rowData['Registration ID']);
           if (existingRow) {
             updates.push({ row: existingRow, data: rowData });
