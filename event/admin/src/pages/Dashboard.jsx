@@ -82,19 +82,19 @@ export default function Dashboard() {
     try {
       setLoading(true)
       const response = await axios.get(`${API_URL}/clients/all`)
-      // Filter and transform clients with package registrations
-      const packageRegistrations = response.data
-        .filter(client => client.package.status==='active') // Only get clients with package data
-        .map(client => ({
-          _id: client._id,
-          userId: client.uid,
-          userName: client.userName,
-          email: client.email,
-          paymentType: client.package.payment.type,
-          paymentId: client.package.payment.payment_id? client.package.payment.payment_id: null,
-          registeredEvents: client.package.registered,
-          paymentStatus: client.package.payment.status
-        }))
+      // Ensure response.data is an array before filtering
+      const packageRegistrations = Array.isArray(response.data)
+        ? response.data.filter(client => client.package.status === 'active').map(client => ({
+            _id: client._id,
+            userId: client.uid,
+            userName: client.userName,
+            email: client.email,
+            paymentType: client.package.payment.type,
+            paymentId: client.package.payment.payment_id ? client.package.payment.payment_id : null,
+            registeredEvents: client.package.registered,
+            paymentStatus: client.package.payment.status
+          }))
+        : [];
       setPackages(packageRegistrations)
       setError(null)
     } catch (error) {
