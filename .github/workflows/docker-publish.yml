@@ -25,7 +25,7 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
         with:
-          context: ./events/backend
-          file: ./events/backend/Dockerfile
+          context: ./event/backend
+          file: ./event/backend/Dockerfile
           push: true
-          tags: ghcr.io/ritaban06/events-backend:latest
+          tags: ghcr.io/ritaban06/event-backend:latest
