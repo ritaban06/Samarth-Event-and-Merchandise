@@ -3,6 +3,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const { GoogleSpreadsheet } = require('google-spreadsheet');
+const fetch = require('node-fetch');
 const eventRoutes = require('./routes/eventRoutes');
 const authRoutes = require('./routes/authRoutes');
 const adminRoutes = require('./routes/adminRoutes');
@@ -59,6 +60,9 @@ mongoose.connect(process.env.MONGO_URI, {
   // Parse cluster/host name from MONGO_URI
   const hostName = process.env.MONGO_URI.split('@')[1].split('/')[0];
   console.log(`MongoDB Connected successfully to database: ${hostName}`);
+
+  // ✅ Start watching MongoDB changes after successful connection
+  watchEvents();
 })
 .catch(err => console.error('MongoDB Connection Error:', err));
 
@@ -152,6 +156,54 @@ const authenticateGoogleSheets = async () => {
 // Initialize Google Sheets connection
 authenticateGoogleSheets();
 
+// ---------------- Change Stream Watcher with Batching ----------------
+let changedEvents = new Set();
+
+async function watchEvents() {
+  try {
+    const db = mongoose.connection.db;
+    const collection = db.collection("events");
+
+    const changeStream = collection.watch();
+    changeStream.on("change", async (change) => {
+      console.log("MongoDB change detected:", change);
+
+      let eventName = null;
+
+      if (change.fullDocument && change.fullDocument.eventName) {
+        eventName = change.fullDocument.eventName;
+      } else if (change.documentKey && change.documentKey._id) {
+        const updatedDoc = await collection.findOne({ _id: change.documentKey._id });
+        eventName = updatedDoc?.eventName;
+      }
+
+      if (eventName) {
+        changedEvents.add(eventName);
+      }
+    });
+
+    // Every 2 minutes, check if any changes happened
+    setInterval(async () => {
+      if (changedEvents.size > 0) {
+        const eventsToSync = Array.from(changedEvents);
+        changedEvents.clear();
+
+        console.log("Syncing with Google Sheets for events:", eventsToSync);
+
+        await fetch("https://script.google.com/macros/s/AKfycbxmE2Z8d_5CANWBRwEOA2R-7zxaVqnwSQpu46631OCLWUQno8sx9NEsMjjzndTD26sn/exec", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ events: eventsToSync })
+        });
+      }
+    }, 2 * 60 * 1000); // every 2 minutes
+
+    console.log("✅ Change stream watcher started on 'events' collection");
+  } catch (err) {
+    console.error("Error starting change stream:", err);
+  }
+}
+
 // Error handling middleware
 app.use((err, req, res, next) => {
     console.error(err.stack);
@@ -164,4 +216,4 @@ app.use((err, req, res, next) => {
 // Start Server
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
-}); 
+});
