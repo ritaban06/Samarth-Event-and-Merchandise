@@ -67,5 +67,6 @@ cron.schedule('*/5 * * * *', async () => {
     console.error('[CRON] Google Sheets sync via API failed:', error?.response?.data || error.message);
   }
 });
-
+// Prevent worker from exiting
+setInterval(() => {}, 60 * 60 * 1000); // 1 hour empty loop
 module.exports = {}; // For possible future extension
