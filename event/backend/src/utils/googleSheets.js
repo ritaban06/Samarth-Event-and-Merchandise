@@ -280,14 +280,14 @@ class GoogleSheetsService {
         // Format the header row and add conditional formatting in batches
         try {
           // Get the column indices
-          const paymentStatusIndex = headers.indexOf('Payment Status');
+          const paymentStatusIndex = currentHeaders.indexOf('Payment Status');
           const lastRow = sheet.rowCount;
-          
+
           // Format headers in one batch
           await executeWithBackoff(async () => {
-            const headerRange = `A1:${String.fromCharCode(64 + headers.length)}1`;
+            const headerRange = `A1:${String.fromCharCode(64 + currentHeaders.length)}1`;
             await sheet.loadCells(headerRange);  // Load header row
-            for (let i = 0; i < headers.length; i++) {
+            for (let i = 0; i < currentHeaders.length; i++) {
               const cell = sheet.getCell(0, i);
               cell.textFormat = { bold: true };
               cell.horizontalAlignment = 'CENTER';
