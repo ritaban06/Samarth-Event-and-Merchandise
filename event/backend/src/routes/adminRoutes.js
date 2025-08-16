@@ -29,14 +29,24 @@ const googleSheetsService = require('../utils/googleSheets');
 
 // Middleware to check for JWT token
 const authenticateToken = (req, res, next) => {
-    const token = req.header('auth-token');
-    if (!token) return res.sendStatus(401); // Unauthorized
+  // Accept both 'auth-token' and 'Authorization' headers
+  let token = req.header('auth-token');
+  if (!token && req.header('Authorization')) {
+    // Support 'Bearer <token>' format
+    const authHeader = req.header('Authorization');
+    if (authHeader.startsWith('Bearer ')) {
+      token = authHeader.substring(7);
+    } else {
+      token = authHeader;
+    }
+  }
+  if (!token) return res.sendStatus(401); // Unauthorized
 
-    jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-        if (err) return res.sendStatus(403); // Forbidden
-        req.user = user;
-        next();
-    });
+  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+    if (err) return res.sendStatus(403); // Forbidden
+    req.user = user;
+    next();
+  });
 };
 
 // Modify the sync-sheets route to include additional fields
