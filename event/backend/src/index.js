@@ -156,25 +156,37 @@ const authenticateGoogleSheets = async () => {
 // Initialize Google Sheets connection
 authenticateGoogleSheets();
 
-// ---------------- Change Stream Watcher with Batching ----------------
+// ---------------- Change Stream Watcher with Batching + Error Handling ----------------
 let changedEvents = new Set();
+let resumeToken = null; // will store last seen resume token
 
 async function watchEvents() {
   try {
     const db = mongoose.connection.db;
     const collection = db.collection("events");
 
-    const changeStream = collection.watch();
+    // If we have a resume token, resume from there
+    const pipeline = [];
+    const options = resumeToken ? { resumeAfter: resumeToken } : {};
+
+    const changeStream = collection.watch(pipeline, options);
+
     changeStream.on("change", async (change) => {
-      console.log("MongoDB change detected:", change);
+      console.log("📌 MongoDB change detected:", change);
+
+      // save resume token for recovery
+      resumeToken = change._id;
 
       let eventName = null;
-
       if (change.fullDocument && change.fullDocument.eventName) {
         eventName = change.fullDocument.eventName;
       } else if (change.documentKey && change.documentKey._id) {
-        const updatedDoc = await collection.findOne({ _id: change.documentKey._id });
-        eventName = updatedDoc?.eventName;
+        try {
+          const updatedDoc = await collection.findOne({ _id: change.documentKey._id });
+          eventName = updatedDoc?.eventName;
+        } catch (err) {
+          console.error("⚠️ Failed to fetch updated doc:", err);
+        }
       }
 
       if (eventName) {
@@ -182,27 +194,47 @@ async function watchEvents() {
       }
     });
 
-    // Every 2 minutes, check if any changes happened
+    // ✅ Handle errors so Node doesn’t crash
+    changeStream.on("error", (err) => {
+      console.error("❌ Change stream error:", err);
+      console.log("Restarting watcher in 5s...");
+      setTimeout(() => watchEvents(), 5000);
+    });
+
+    // ✅ Handle close events
+    changeStream.on("close", () => {
+      console.warn("⚠️ Change stream closed. Restarting in 5s...");
+      setTimeout(() => watchEvents(), 5000);
+    });
+
+    // ✅ Batch sync every 2 minutes
     setInterval(async () => {
       if (changedEvents.size > 0) {
         const eventsToSync = Array.from(changedEvents);
         changedEvents.clear();
 
-        console.log("Syncing with Google Sheets for events:", eventsToSync);
+        console.log("🔄 Syncing with Google Sheets for events:", eventsToSync);
 
-        await fetch("https://script.google.com/macros/s/AKfycbxmE2Z8d_5CANWBRwEOA2R-7zxaVqnwSQpu46631OCLWUQno8sx9NEsMjjzndTD26sn/exec", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ events: eventsToSync })
-        });
+        try {
+          await fetch("https://script.google.com/macros/s/AKfycbxmE2Z8d_5CANWBRwEOA2R-7zxaVqnwSQpu46631OCLWUQno8sx9NEsMjjzndTD26sn/exec", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ events: eventsToSync })
+          });
+        } catch (err) {
+          console.error("⚠️ Failed to call Apps Script webhook:", err);
+        }
       }
-    }, 2 * 60 * 1000); // every 2 minutes
+    }, 2 * 60 * 1000);
 
     console.log("✅ Change stream watcher started on 'events' collection");
   } catch (err) {
     console.error("Error starting change stream:", err);
+    console.log("Retrying in 5s...");
+    setTimeout(() => watchEvents(), 5000);
   }
 }
+
 
 // Error handling middleware
 app.use((err, req, res, next) => {
