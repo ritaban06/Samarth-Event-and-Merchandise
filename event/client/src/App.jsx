@@ -10,6 +10,7 @@ import { useState, useEffect } from "react";
 import { AuthProvider } from "./context/AuthContext.jsx";
 import Profile from "./pages/Profile";
 import Teams from "./pages/teams.jsx";
+import PastEvent from "./pages/pastEvent.jsx";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Footer from "./components/Footer.jsx";
 import AnimatedGradientBackground from "./components/AnimatedGradientBackground.jsx";
@@ -61,6 +62,7 @@ const App = () => {
               />
               <Route path="/register" element={<Register />} />
               <Route path="/teams" element={<Teams />} />
+              <Route path="/past-events" element={<PastEvent />} />
               <Route
                 path="/otp-verification"
                 element={<OtpVerification setIsLoggedIn={setIsLoggedIn} />}

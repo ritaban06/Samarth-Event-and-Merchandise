@@ -20,15 +20,14 @@ const SafalyaHomePage = () => {
 
           <div className="relative z-10 text-center max-w-4xl mx-auto">
             <h1 className="text-5xl md:text-7xl font-extrabold mb-6 tracking-tight">
-              <GradientText variant="primary" className="text-5xl md:text-7xl">SAFALYA</GradientText>
-              <span className="text-2xl md:text-3xl font-light block mt-2">The Annual Educational Fest of TMSL</span>
+              <GradientText variant="primary" className="text-5xl md:text-7xl">Official Samarth Events Page</GradientText>
+              <span className="text-2xl md:text-3xl font-light block mt-2">Educational Society of TMSL</span>
             </h1>
 
             <p className="text-xl md:text-2xl mb-8 text-white/80 max-w-3xl mx-auto font-light leading-relaxed">
-              The largest educational fest of Eastern India. A celebration of innovation, talent, and the pursuit of excellence in education.
+              SAMARTH literally means Competent, strong and powerful.
             </p>
-
-            <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-8 mb-12">
+            {/* <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-8 mb-12">
               <div className="flex items-center space-x-2 text-purple-300">
                 <Calendar className="h-5 w-5" />
                 <span className="text-lg">March 19-21, 2025</span>
@@ -38,7 +37,7 @@ const SafalyaHomePage = () => {
                 <MapPin className="h-5 w-5" />
                 <span className="text-lg">Techno Main Salt Lake</span>
               </div>
-            </div>
+            </div> */}
 
             <Link to="/events">
               <GradientButton variant="primary" className="text-lg px-8 py-4">
@@ -212,7 +211,7 @@ const SafalyaHomePage = () => {
           <div className="absolute inset-0 bg-cover bg-center opacity-10"></div>
           <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-amber-500/10 to-blue-800/30"></div>
           
-          <div className="relative z-10 p-12 text-center">
+          {/* <div className="relative z-10 p-12 text-center">
             <h2 className="text-3xl md:text-4xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-blue-200">
               Ready to Experience Excellence?
             </h2>
@@ -227,7 +226,7 @@ const SafalyaHomePage = () => {
                 Contact Us
               </button></a>
             </div>
-          </div>
+          </div> */}
         </div>
       </section>
       

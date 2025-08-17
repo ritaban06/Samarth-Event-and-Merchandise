@@ -1,11 +1,17 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { useAuth } from "../context/AuthContext";
-import { Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Snackbar, MenuItem, FormLabel, FormGroup, FormControlLabel, Checkbox, InputLabel, Select, FormControl, Radio } from "@mui/material";
-import { useNavigate } from "react-router-dom";
+import { Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Snackbar, MenuItem, FormLabel, FormGroup, FormControlLabel, Checkbox, InputLabel, Select, FormControl, Radio, Tabs, Tab, Box, Chip, Typography } from "@mui/material";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import EventCard from "./EventCard";
-import Loader from "../components/Loader";
+import AllEventsCard from "../components/AllEventsCard";
+// import Loader from "../components/Loader";
+import SkeletonEventCard from "../components/SkeletonEventCard";
+import ViewMoreModal from "../components/ViewMoreModal";
 import Packages from "./Packages";
+import { PAST_EVENTS, getPastEventsByYear, getPastEventYears } from "../constants/pastEvents";
+import { FLAGSHIP_EVENTS, getFlagshipEventsByType } from "../constants/flagshipEvents";
+import FlagshipEventCard from "../components/FlagshipEventCard";
 
 const API_URL = import.meta.env.VITE_API_URL;
 const RPG_ID = import.meta.env.VITE_RPG_ID;
@@ -31,20 +37,35 @@ const getDefaultRegistrationData = () => ({
 const Events = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [events, setEvents] = useState([]);
+  const [pastEvents] = useState(PAST_EVENTS);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [activeTab, setActiveTab] = useState(0); // 0 = Current/Upcoming, 1 = Past, 2 = Flagship
+  const [selectedYear, setSelectedYear] = useState(null);
+  const [eventTypeFilter, setEventTypeFilter] = useState('all');
   const [openRegisterModal, setOpenRegisterModal] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'info' });
   const [registrationData, setRegistrationData] = useState(getDefaultRegistrationData());
   const [isTeamLeader, setIsTeamLeader] = useState(false); // New state for team leader
-  
-  // Payment related states
+  const [openViewMoreModal, setOpenViewMoreModal] = useState(false);  // New state for view more modal
+  const [viewMoreEvent, setViewMoreEvent] = useState(null); // Payment related states
   const [paymentId, setPaymentId] = useState("");
   const [paymentDetails, setPaymentDetails] = useState(null);
   const [isPaymentProcessing, setIsPaymentProcessing] = useState(false);
   const [userPackage, setUserPackage] = useState(null);
+
+  useEffect(() => {
+    // Set initial tab based on URL parameter
+    const tabParam = searchParams.get('tab');
+    if (tabParam === 'past') {
+      setActiveTab(1);
+    } else if (tabParam === 'flagship') {
+      setActiveTab(2);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     if (!localStorage.getItem('token') || !localStorage.getItem('user')) {
@@ -54,6 +75,7 @@ const Events = () => {
     }
   }, [user]);
 
+  //Fetching events from API
   useEffect(() => {
     const fetchEvents = async () => {
       try {
@@ -83,6 +105,67 @@ const Events = () => {
     } catch (error) {
       console.error('Error fetching user package:', error);
       return null;
+    }
+  };
+
+  // Function to view event details
+  const handleViewMore = (event) => {
+    setViewMoreEvent(event);
+    setOpenViewMoreModal(true);
+  };
+
+  const handleCloseViewMore = () => {
+    setOpenViewMoreModal(false);
+    setViewMoreEvent(null);
+  };
+
+  // Helper function to determine if an event is upcoming
+  const isUpcomingEvent = (eventDate) => {
+    const today = new Date();
+    const event = new Date(eventDate);
+    return event >= today;
+  };
+
+  // Filter events based on type
+  const filterEventsByType = (events) => {
+    if (eventTypeFilter === 'all') return events;
+    if (eventTypeFilter === 'free') return events.filter(event => event.payment?.status === 'free');
+    if (eventTypeFilter === 'paid') return events.filter(event => event.payment?.status === 'paid');
+    if (eventTypeFilter === 'team') return events.filter(event => event.team === 'team');
+    if (eventTypeFilter === 'solo') return events.filter(event => event.team === 'solo');
+    return events;
+  };
+
+  // Get filtered past events by year and type
+  const getFilteredPastEvents = () => {
+    let filtered = pastEvents;
+    
+    if (selectedYear) {
+      filtered = getPastEventsByYear(selectedYear);
+    }
+    
+    return filterEventsByType(filtered);
+  };
+
+  // Get filtered current events
+  const getFilteredCurrentEvents = () => {
+    return filterEventsByType(events);
+  };
+
+  // Separate current events into upcoming and ongoing
+  const upcomingEvents = getFilteredCurrentEvents().filter(event => isUpcomingEvent(event.date));
+  const ongoingEvents = getFilteredCurrentEvents().filter(event => !isUpcomingEvent(event.date) && event.isActive);
+
+  const handleTabChange = (event, newValue) => {
+    setActiveTab(newValue);
+    setSelectedYear(null); // Reset year filter when switching tabs
+    // Update URL parameter
+    if (newValue === 1) {
+      setSearchParams({ tab: 'past' });
+    } else if (newValue === 2) {
+      setSearchParams({ tab: 'flagship' });
+    } else {
+      setSearchParams({});
     }
   };
 
@@ -552,61 +635,236 @@ const Events = () => {
     return null; // Return null if validation passes
   };
 
-  if (loading)
-    return (
-      <Loader/>
-    );
-
-  if (error)
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-900">
-        <div className="text-red-400 text-center">
-          <p className="text-xl mb-4">{error}</p>
-          <button onClick={() => window.location.reload()} className="px-4 py-2 bg-yellow-700/50 text-white rounded-lg hover:bg-yellow-700/70">Retry</button>
-        </div>
-      </div>
-    );
-
   return (
     <div className="min-h-screen py-20 px-6 flex flex-col items-center bg-gradient-to-r text-white">
-      <header className="relative text-center py-10 flex flex-col items-center">
-      <h1 className="m-3 pt-1 pb-3 text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-purple-300">
-          🧙‍♂️ The Marauder's Map
+      
+      <header className="relative text-center py-10 flex flex-col items-center mt-12 max-w-4xl">
+        <h1 className="m-3 pt-1 pb-3 text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-purple-300">
+           All Events at Samarth
         </h1>
         <p className="max-w-2xl text-center text-gray-300 text-lg mb-4">
-        The Package Event grants you entry into any six legendary trials of your choosing at a fixed price but choose wisely, for each step seals your fate! 🪄
+          Explore our complete collection of events - from current opportunities to register for exciting upcoming events, 
+          to our archive of past events that showcase the amazing experiences we've created together! 🚀✨
         </p>
-        <div className="h-1 w-32 bg-yellow-400 rounded-full mb-6 justify-center items-center"></div>
-      </header>
-      <Packages/>
-      <header className="relative text-center py-10 flex flex-col items-center mt-12">
-      <h1 className="m-3 pt-1 pb-3 text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-amber-400">
-          🎯 Events at Safalya
-        </h1>
-        <p className="max-w-2xl text-center text-gray-300 text-lg mb-4">
-          Discover innovative events and immerse yourself in a world of learning and growth. Register now and let the journey begin! 🚀✨
-        </p>
-        <div className="h-1 w-32 bg-amber-400 rounded-full mb-6 justify-center items-center"></div>
+        <div className="h-1 w-32 bg-yellow-400 rounded-full mb-6"></div>
       </header>
 
-      {events.length === 0 ? (
-        <div className="text-center text-gray-300">
-          <p>No events available at the moment. Check back later for more exciting events!</p>
-        </div>
-      ) : (
-        <div
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mt-10 max-w-7xl"
+      {/* Tab Navigation */}
+      <Box sx={{ width: '100%', maxWidth: '800px', mb: 4 }}>
+        <Tabs 
+          value={activeTab} 
+          onChange={handleTabChange} 
+          centered
+          sx={{
+            '& .MuiTab-root': {
+              color: 'rgba(255, 255, 255, 0.7)',
+              fontSize: '1.1rem',
+              fontWeight: 'bold',
+              '&.Mui-selected': {
+                color: '#fbbf24',
+              },
+            },
+            '& .MuiTabs-indicator': {
+              backgroundColor: '#fbbf24',
+            },
+          }}
         >
-          {events.map((event) => (
-            <EventCard
-              key={event._id}
-              {...event}
-              onRegister={() => handleRegisterClick(event)}
-              user={user}
-            />
-          ))}
+          <Tab 
+            label={
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <span>🚀 Current & Upcoming</span>
+                <Chip 
+                  label={upcomingEvents.length + ongoingEvents.length} 
+                  size="small" 
+                  sx={{ bgcolor: '#3b82f6', color: 'white', fontSize: '0.75rem' }}
+                />
+              </Box>
+            } 
+          />
+          <Tab 
+            label={
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <span>🏆 Past Events</span>
+                <Chip 
+                  label={getFilteredPastEvents().length} 
+                  size="small" 
+                  sx={{ bgcolor: '#8b5cf6', color: 'white', fontSize: '0.75rem' }}
+                />
+              </Box>
+            } 
+          />
+          <Tab 
+            label={
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <span>🌟 Flagship Events</span>
+                <Chip 
+                  label={getFlagshipEventsByType(eventTypeFilter).length}
+                  size="small"
+                  sx={{ bgcolor: '#fbbf24', color: 'white', fontSize: '0.75rem' }}
+                />
+              </Box>
+            }
+          />
+        </Tabs>
+      </Box>
+
+      {/* Filters */}
+      <Box sx={{ display: 'flex', gap: 2, mb: 4, flexWrap: 'wrap', justifyContent: 'center' }}>
+        {/* Event Type Filter */}
+        <FormControl size="small" sx={{ minWidth: 120 }}>
+          <InputLabel sx={{ color: 'white' }}>Event Type</InputLabel>
+          <Select
+            value={eventTypeFilter}
+            onChange={(e) => setEventTypeFilter(e.target.value)}
+            sx={{
+              color: 'white',
+              '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255, 255, 255, 0.3)' },
+              '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255, 255, 255, 0.5)' },
+              '& .MuiSvgIcon-root': { color: 'white' },
+            }}
+          >
+            <MenuItem value="all">All Events</MenuItem>
+            <MenuItem value="free">Free Events</MenuItem>
+            <MenuItem value="paid">Paid Events</MenuItem>
+            <MenuItem value="team">Team Events</MenuItem>
+            <MenuItem value="solo">Solo Events</MenuItem>
+          </Select>
+        </FormControl>
+
+      {/* Year Filter for Past Events */}
+      {activeTab === 1 && (
+        <FormControl size="small" sx={{ minWidth: 120 }}>
+          <InputLabel sx={{ color: 'white' }}>Year</InputLabel>
+          <Select
+            value={selectedYear || ''}
+            onChange={(e) => setSelectedYear(e.target.value || null)}
+            sx={{
+              color: 'white',
+              '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255, 255, 255, 0.3)' },
+              '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255, 255, 255, 0.5)' },
+              '& .MuiSvgIcon-root': { color: 'white' },
+            }}
+          >
+            <MenuItem value="">All Years</MenuItem>
+            {getPastEventYears().map(year => (
+              <MenuItem key={year} value={year}>{year}</MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      )}
+      </Box>
+
+      {/* Events Content */}
+      
+      {activeTab === 0 ? (
+        <div className="w-full max-w-7xl">
+          {error ? (
+            <div className="flex items-center justify-center py-20">
+              <div className="text-red-400 text-center">
+                <p className="text-xl mb-4">{error}</p>
+                <button onClick={() => window.location.reload()} className="px-4 py-2 bg-yellow-700/50 text-white rounded-lg hover:bg-yellow-700/70">Retry</button>
+              </div>
+            </div>
+          ) : (
+            <>
+              {/* Upcoming Events Section */}
+              <div className="mb-12">
+                <h2 className="text-3xl font-bold text-center mb-8 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-green-400">
+                  🚀 Upcoming Events {!loading && `(${upcomingEvents.length})`}
+                </h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {loading ? (
+                    [...Array(3)].map((_, i) => (
+                      <SkeletonEventCard key={`upcoming-skeleton-${i}`} />
+                    ))
+                  ) : (
+                    upcomingEvents.map((event) => (
+                      <EventCard
+                        key={event._id}
+                        {...event}
+                        onRegister={() => handleRegisterClick(event)}
+                        user={user}
+                      />
+                    ))
+                  )}
+                </div>
+              </div>
+
+              {/* Ongoing Events Section */}
+              <div className="mb-12">
+                <h2 className="text-3xl font-bold text-center mb-8 text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-400">
+                  🔥 Ongoing Events {!loading && `(${ongoingEvents.length})`}
+                </h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {loading ? (
+                    [...Array(3)].map((_, i) => (
+                      <SkeletonEventCard key={`ongoing-skeleton-${i}`} />
+                    ))
+                  ) : (
+                    ongoingEvents.map((event) => (
+                      <EventCard
+                        key={event._id}
+                        {...event}
+                        onRegister={() => handleRegisterClick(event)}
+                        user={user}
+                      />
+                    ))
+                  )}
+                </div>
+              </div>
+
+              {!loading && upcomingEvents.length === 0 && ongoingEvents.length === 0 && (
+                <div className="text-center text-gray-300 py-12">
+                  <div className="text-6xl mb-4">📅</div>
+                  <h3 className="text-2xl font-bold mb-2 text-yellow-300">No Current Events</h3>
+                  <p className="text-lg">Check back later for exciting upcoming events!</p>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      ) : activeTab === 1 ? (
+        <div className="w-full max-w-7xl">
+          {getFilteredPastEvents().length === 0 ? (
+            <div className="text-center text-gray-300 py-12">
+              <div className="text-6xl mb-4">🏆</div>
+              <h3 className="text-2xl font-bold mb-2 text-purple-300">No Past Events Found</h3>
+              <p className="text-lg">Try adjusting your filters to see more events.</p>
+            </div>
+          ) : (
+            <>
+              <h2 className="text-3xl font-bold text-center mb-8 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
+                🏆 Past Events ({getFilteredPastEvents().length})
+                {selectedYear && <span className="text-purple-300"> - {selectedYear}</span>}
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                {getFilteredPastEvents().map((event) => (
+                  <AllEventsCard
+                    key={event.id}
+                    {...event}
+                    eventType="past"
+                    onViewMore={()=>handleViewMore(event)}
+                    user={user}
+                  />
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+
+      ) : (
+        <div className="w-full max-w-7xl">
+          <h2 className="text-3xl font-bold text-center mb-8 text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-pink-400">
+            🌟 Flagship Events ({getFlagshipEventsByType(eventTypeFilter).length})
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {getFlagshipEventsByType(eventTypeFilter).map(event => (
+              <FlagshipEventCard key={event.id} event={event} />
+            ))}
+          </div>
         </div>
       )}
+      
       <Dialog 
         open={openRegisterModal} 
         onClose={handleRegisterClose} 
@@ -851,7 +1109,15 @@ const Events = () => {
             <div className="h-1 w-16 bg-blue-500 mx-2 rounded-full opacity-70"></div>
             <div className="h-1 w-4 bg-yellow-400 mx-2 rounded-full opacity-70"></div>
             <div className="h-1 w-8 bg-purple-500 mx-2 rounded-full opacity-70"></div>
-          </div>
+      </div>
+      {/* ViewMoreModal element  */}
+      {viewMoreEvent && (
+        <ViewMoreModal
+          open={openViewMoreModal}
+          handleClose={handleCloseViewMore}
+          event={viewMoreEvent}
+        />
+      )}
     </div>
   );
 };

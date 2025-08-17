@@ -10,6 +10,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@emotion/cache": "^11.11.0",
+    "@emotion/react": "^11.11.4",
+    "@emotion/styled": "^11.14.1",
     "@mui/icons-material": "^6.4.5",
     "@mui/material": "^6.4.5",
     "@react-oauth/google": "^0.12.1",
@@ -18,6 +21,7 @@
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
+    "framer-motion": "^12.23.5",
     "google-spreadsheet": "^4.1.4",
     "lucide-react": "^0.476.0",
     "mongoose": "^8.10.2",
