@@ -110,13 +110,36 @@ function syncSingleEvent(eventName) {
       }
     });
 
+    var rowIndex;
     if (existingUidMap[reg.uid]) {
       Logger.log('✏️ Updating row for UID: ' + reg.uid);
-      sheet.getRange(existingUidMap[reg.uid], 1, 1, values.length).setValues([values]);
+      rowIndex = existingUidMap[reg.uid];
+      sheet.getRange(rowIndex, 1, 1, values.length).setValues([values]);
     } else {
       Logger.log('➕ Adding new row for UID: ' + reg.uid);
       sheet.appendRow(values);
+      rowIndex = sheet.getLastRow();
     }
+
+    // Set background and text color for Payment Status cell
+    var paymentStatusCol = headers.indexOf('Payment Status') + 1;
+    var paymentStatus = values[paymentStatusCol - 1];
+    var bgColor = '#ffffff'; // white
+    var fontColor = '#000000'; // black
+    if (paymentStatus === 'Unpaid') {
+      bgColor = '#e74c3c'; // red
+      fontColor = '#ffffff'; // white
+    } else if (paymentStatus === 'Free') {
+      bgColor = '#8e44ad'; // purple
+      fontColor = '#ffffff'; // white
+    } else if (paymentStatus === 'Paid') {
+      bgColor = '#27ae60'; // green
+      fontColor = '#ffffff'; // white
+    } else if (paymentStatus === 'Pending') {
+      bgColor = '#f9e79f'; // yellow
+      fontColor = '#000000'; // black
+    }
+    sheet.getRange(rowIndex, paymentStatusCol).setBackground(bgColor).setFontColor(fontColor);
   });
 }
 
