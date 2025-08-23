@@ -85,12 +85,13 @@ function syncSingleEvent(eventName) {
         case 'Registration ID': return reg.uid || 'N/A';
         case 'Student Name':    return reg.name || 'N/A';
         case 'Email':           return reg.email || 'N/A';
-        case 'Event Name':      return reg.eventName || 'N/A';
+        case 'Event Name':      return event.eventName || reg.eventName || 'N/A';
 
         case 'Payment Status': 
           return reg.payment?.status === 'paid' ? 'Paid' :
                  reg.payment?.status === 'pending' ? 'Pending' :
-                 reg.payment?.status === 'package' ? 'Package' : 'Unpaid';
+                 reg.payment?.status === 'package' ? 'Package' :
+                 reg.payment?.status === 'free' ? 'Free' : 'Unpaid';
 
         case 'Payment ID':      return reg.payment?.payment_id || 'N/A';
         case 'Payment Type':    return reg.payment?.type || 'N/A';
