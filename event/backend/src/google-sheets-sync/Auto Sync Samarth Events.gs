@@ -85,7 +85,7 @@ function syncSingleEvent(eventName) {
         case 'Registration ID': return reg.uid || 'N/A';
         case 'Student Name':    return reg.name || 'N/A';
         case 'Email':           return reg.email || 'N/A';
-        case 'Event Name':      return event.eventName || reg.eventName || 'N/A';
+        case 'Event Name':      return event.eventName || 'N/A';
 
         case 'Payment Status': 
           return reg.payment?.status === 'paid' ? 'Paid' :
