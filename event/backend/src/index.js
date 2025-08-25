@@ -72,6 +72,54 @@ app.use('/api', authRoutes);
 app.use('/api', adminRoutes);
 app.use('/api/packages', packageRoutes);
 
+// Dashboard Sync endpoint
+app.post('/api/admin/sync-sheets', async (req, res) => {
+  try {
+    const { registrations } = req.body;
+    
+    // Validate input
+    if (!registrations || !Array.isArray(registrations)) {
+      return res.status(400).json({ 
+        message: 'Invalid registrations data',
+        details: 'Registrations must be an array'
+      });
+    }
+    
+    // Extract unique event names from registrations
+    const eventNames = [...new Set(registrations.map(reg => reg.eventName))];
+    
+    // Check if we have events to sync
+    if (eventNames.length === 0) {
+      return res.status(400).json({
+        message: 'No valid event names found in registrations'
+      });
+    }
+    
+    console.log(`📊 Dashboard requested sync for ${eventNames.length} events with ${registrations.length} registrations`);
+    
+    // Use our unified sync function
+    const success = await syncEventsByName(eventNames);
+    
+    if (success) {
+      res.json({ 
+        message: 'Data sync initiated successfully',
+        events: eventNames
+      });
+    } else {
+      res.status(429).json({
+        message: 'Sync skipped due to rate limiting',
+        note: 'Try again later'
+      });
+    }
+  } catch (error) {
+    console.error('Dashboard sync error:', error);
+    res.status(500).json({ 
+      message: 'Failed to sync with Google Sheets',
+      error: error.message
+    });
+  }
+});
+
 // Sample Route
 app.get('/', (req, res) => {
     res.send('Server is running...');
@@ -159,6 +207,72 @@ authenticateGoogleSheets();
 // ---------------- Change Stream Watcher with Batching + Error Handling ----------------
 let changedEvents = new Set();
 let resumeToken = null; // will store last seen resume token
+let lastSyncTime = 0;
+const MIN_SYNC_INTERVAL = 2 * 60 * 1000; // 2 minutes minimum between syncs
+const MAX_EVENTS_PER_SYNC = 10; // Maximum number of events to sync in one batch
+const MAX_API_REQUESTS_PER_DAY = 20000; // Google Apps Script quotas (being conservative)
+const DAY_IN_MS = 24 * 60 * 60 * 1000;
+let apiRequestsToday = 0;
+let lastDayReset = Date.now();
+
+// Reset API request counter daily
+setInterval(() => {
+  const now = Date.now();
+  if (now - lastDayReset >= DAY_IN_MS) {
+    console.log("🔄 Resetting daily API request counter");
+    apiRequestsToday = 0;
+    lastDayReset = now;
+  }
+}, 60 * 60 * 1000); // Check every hour
+
+// Function to sync events to Google Sheets via Apps Script
+async function syncEventsToSheets(events) {
+  // Check if we've exceeded our daily quota
+  if (apiRequestsToday >= MAX_API_REQUESTS_PER_DAY) {
+    console.warn("⚠️ Daily API request quota exceeded. Skipping sync.");
+    return false;
+  }
+  
+  const now = Date.now();
+  
+  // Enforce minimum time between syncs
+  if (now - lastSyncTime < MIN_SYNC_INTERVAL) {
+    console.log("⏱️ Too soon for another sync. Waiting...");
+    return false;
+  }
+  
+  // Limit number of events in one batch
+  const eventsToSync = events.slice(0, MAX_EVENTS_PER_SYNC);
+  
+  console.log("🔄 Syncing with Google Sheets for events:", eventsToSync);
+  
+  try {
+    const response = await fetch("https://script.google.com/macros/s/AKfycbzpUiGu4AhzhgspfP3J6kjnO4uDRHL567kGJ6C3FlGLTU8DBlZen6mIzz9ML28VluQ/exec", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ events: eventsToSync })
+    });
+    
+    if (!response.ok) {
+      throw new Error(`API returned ${response.status}: ${await response.text()}`);
+    }
+    
+    // Update counters
+    lastSyncTime = now;
+    apiRequestsToday++;
+    console.log(`✅ Sync complete. API requests today: ${apiRequestsToday}/${MAX_API_REQUESTS_PER_DAY}`);
+    
+    return true;
+  } catch (err) {
+    console.error("❌ Failed to call Apps Script webhook:", err);
+    return false;
+  }
+}
+
+// Unified event sync function that can handle both manual and automatic syncs
+async function syncEventsByName(eventNames) {
+  return await syncEventsToSheets(eventNames);
+}
 
 async function watchEvents() {
   try {
@@ -212,20 +326,11 @@ async function watchEvents() {
       if (changedEvents.size > 0) {
         const eventsToSync = Array.from(changedEvents);
         changedEvents.clear();
-
-        console.log("🔄 Syncing with Google Sheets for events:", eventsToSync);
-
-        try {
-          await fetch("https://script.google.com/macros/s/AKfycbzpUiGu4AhzhgspfP3J6kjnO4uDRHL567kGJ6C3FlGLTU8DBlZen6mIzz9ML28VluQ/exec", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ events: eventsToSync })
-          });
-        } catch (err) {
-          console.error("⚠️ Failed to call Apps Script webhook:", err);
-        }
+        
+        // Use our unified sync function
+        await syncEventsByName(eventsToSync);
       }
-    }, 2 * 60 * 1000);
+    }, MIN_SYNC_INTERVAL);
 
     console.log("✅ Change stream watcher started on 'events' collection");
   } catch (err) {
