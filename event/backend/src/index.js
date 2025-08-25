@@ -216,7 +216,7 @@ async function watchEvents() {
         console.log("🔄 Syncing with Google Sheets for events:", eventsToSync);
 
         try {
-          await fetch("https://script.google.com/macros/s/AKfycbyOcmJYkj0LHfznPIc8RAQenvPaZxSv1lg2PDC5_9H13lPXQmwX00YqioOxG1e7SknK/exec", {
+          await fetch("https://script.google.com/macros/s/AKfycbzpUiGu4AhzhgspfP3J6kjnO4uDRHL567kGJ6C3FlGLTU8DBlZen6mIzz9ML28VluQ/exec", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ events: eventsToSync })
