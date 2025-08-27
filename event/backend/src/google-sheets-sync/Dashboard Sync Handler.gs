@@ -84,6 +84,24 @@ function syncEventSheet(spreadsheet, eventName, registrations) {
   
   // Process each registration
   registrations.forEach(reg => {
+    // Special handling for Ignite event - map semester to year
+    // Check for different variations of "Ignite" event name
+    const ignitePattern = /^ignite(\s+|$|\d*|\s+\d*|\s*\d+\s*)/i;
+    if (ignitePattern.test(eventName) && reg.additionalDetails && reg.additionalDetails.semester) {
+      const semester = parseInt(reg.additionalDetails.semester);
+      if (!isNaN(semester)) {
+        if (semester <= 2) {
+          reg.additionalDetails.year = "1";
+        } else if (semester <= 4) {
+          reg.additionalDetails.year = "2";
+        } else if (semester <= 6) {
+          reg.additionalDetails.year = "3";
+        } else if (semester <= 8) {
+          reg.additionalDetails.year = "4";
+        }
+      }
+    }
+    
     const values = headers.map(header => {
       switch (header) {
         case 'Registration ID': return reg.uid || 'N/A';
