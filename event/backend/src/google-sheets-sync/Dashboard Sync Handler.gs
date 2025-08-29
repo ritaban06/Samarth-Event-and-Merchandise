@@ -26,29 +26,29 @@ function syncDashboardData(registrationsData) {
   const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
   
   // Preprocess registrations to handle Ignite event-specific logic
-  registrationsData.forEach(reg => {
-    if (reg.eventName && reg.additionalDetails && reg.additionalDetails.semester) {
-      const ignitePattern = /^ignite(\s+|$|\d*|\s+\d*|\s*\d+\s*)/i;
-      if (ignitePattern.test(reg.eventName)) {
-        const semester = parseInt(reg.additionalDetails.semester, 10);
-        if (!isNaN(semester)) {
-          if (semester === 1 || semester === 2) {
-            reg.additionalDetails.year = "1";
-          } else if (semester === 3 || semester === 4) {
-            reg.additionalDetails.year = "2";
-          } else if (semester === 5 || semester === 6) {
-            reg.additionalDetails.year = "3";
-          } else if (semester === 7 || semester === 8) {
-            reg.additionalDetails.year = "4";
-          } else {
-            reg.additionalDetails.year = "N/A";
-          }
-        } else {
-          reg.additionalDetails.year = "N/A";
-        }
-      }
-    }
-  });
+  // registrationsData.forEach(reg => {
+  //   if (reg.eventName && reg.additionalDetails && reg.additionalDetails.semester) {
+  //     const ignitePattern = /^ignite(\s+|$|\d*|\s+\d*|\s*\d+\s*)/i;
+  //     if (ignitePattern.test(reg.eventName)) {
+  //       const semester = parseInt(reg.additionalDetails.semester, 10);
+  //       if (!isNaN(semester)) {
+  //         if (semester === 1 || semester === 2) {
+  //           reg.additionalDetails.year = "1";
+  //         } else if (semester === 3 || semester === 4) {
+  //           reg.additionalDetails.year = "2";
+  //         } else if (semester === 5 || semester === 6) {
+  //           reg.additionalDetails.year = "3";
+  //         } else if (semester === 7 || semester === 8) {
+  //           reg.additionalDetails.year = "4";
+  //         } else {
+  //           reg.additionalDetails.year = "N/A";
+  //         }
+  //       } else {
+  //         reg.additionalDetails.year = "N/A";
+  //       }
+  //     }
+  //   }
+  // });
   
   // Group registrations by event
   const eventRegistrations = {};
