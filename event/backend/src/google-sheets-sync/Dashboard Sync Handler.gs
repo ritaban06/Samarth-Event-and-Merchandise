@@ -88,17 +88,21 @@ function syncEventSheet(spreadsheet, eventName, registrations) {
     // Check for different variations of "Ignite" event name
     const ignitePattern = /^ignite(\s+|$|\d*|\s+\d*|\s*\d+\s*)/i;
     if (ignitePattern.test(eventName) && reg.additionalDetails && reg.additionalDetails.semester) {
-      const semester = parseInt(reg.additionalDetails.semester);
+      const semester = parseInt(reg.additionalDetails.semester, 10); // Ensure semester is parsed as an integer
       if (!isNaN(semester)) {
-        if (semester <= 2) {
+        if (semester === 1 || semester === 2) {
           reg.additionalDetails.year = "1";
-        } else if (semester <= 4) {
+        } else if (semester === 3 || semester === 4) {
           reg.additionalDetails.year = "2";
-        } else if (semester <= 6) {
+        } else if (semester === 5 || semester === 6) {
           reg.additionalDetails.year = "3";
-        } else if (semester <= 8) {
+        } else if (semester === 7 || semester === 8) {
           reg.additionalDetails.year = "4";
+        } else {
+          reg.additionalDetails.year = "N/A"; // Handle unexpected semester values
         }
+      } else {
+        reg.additionalDetails.year = "N/A"; // Handle invalid semester values
       }
     }
     
