@@ -246,7 +246,7 @@ async function syncEventsToSheets(events) {
   
   // Preprocess events to include year mapping for Ignite event
   const processedEvents = events.map(event => {
-    if (event.eventName.toLowerCase() === "ignite") {
+    if (event.eventName && event.eventName.toLowerCase() === "ignite") {
       const participants = event.participants || [];
       const participantsWithYear = participants.map(participant => {
         const { Semester } = participant.additionalDetails || {};
