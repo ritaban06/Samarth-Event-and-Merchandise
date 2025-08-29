@@ -245,32 +245,40 @@ async function syncEventsToSheets(events) {
   const eventsToSync = events.slice(0, MAX_EVENTS_PER_SYNC);
   
   // Preprocess events to include year mapping for Ignite event
-  const processedEvents = events.map(event => {
-    if (event.eventName && event.eventName.toLowerCase() === "ignite") {
-      const participants = event.participants || [];
-      const participantsWithYear = participants.map(participant => {
-        const { Semester } = participant.additionalDetails || {};
-        let year = "N/A";
-        if (Semester) {
-          const semester = parseInt(Semester, 10);
-          if (!isNaN(semester)) {
-            if (semester === 1 || semester === 2) {
-              year = "1";
-            } else if (semester === 3 || semester === 4) {
-              year = "2";
-            } else if (semester === 5 || semester === 6) {
-              year = "3";
-            } else if (semester === 7 || semester === 8) {
-              year = "4";
+  const processedEvents = events
+    .filter(event => {
+      if (!event.eventName) {
+        console.warn("⚠️ Skipping event with missing eventName:", event);
+        return false; // Exclude events without an eventName
+      }
+      return true;
+    })
+    .map(event => {
+      if (event.eventName.toLowerCase() === "ignite") {
+        const participants = event.participants || [];
+        const participantsWithYear = participants.map(participant => {
+          const { Semester } = participant.additionalDetails || {};
+          let year = "N/A";
+          if (Semester) {
+            const semester = parseInt(Semester, 10);
+            if (!isNaN(semester)) {
+              if (semester === 1 || semester === 2) {
+                year = "1";
+              } else if (semester === 3 || semester === 4) {
+                year = "2";
+              } else if (semester === 5 || semester === 6) {
+                year = "3";
+              } else if (semester === 7 || semester === 8) {
+                year = "4";
+              }
             }
           }
-        }
-        return { ...participant, additionalDetails: { ...participant.additionalDetails, Year: year } };
-      });
-      return { eventName: event.eventName, participants: participantsWithYear }; // Include participants with mapped year
-    }
-    return { eventName: event.eventName }; // For non-Ignite events, just include the name
-  });
+          return { ...participant, additionalDetails: { ...participant.additionalDetails, Year: year } };
+        });
+        return { eventName: event.eventName, participants: participantsWithYear }; // Include participants with mapped year
+      }
+      return { eventName: event.eventName }; // For non-Ignite events, just include the name
+    });
 
   console.log("🔄 Syncing with Google Sheets for processed events:", processedEvents);
 
