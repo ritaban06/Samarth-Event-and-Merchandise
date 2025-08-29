@@ -247,7 +247,7 @@ async function syncEventsToSheets(events) {
   console.log("🔄 Syncing with Google Sheets for events:", eventsToSync);
   
   try {
-    const response = await fetch("https://script.google.com/macros/s/AKfycbw-fV1m-BJ3TdOB1uFP0XETyHCJYLqvqVS_5ex4S7yzEOddJ6x-pw0ibjkDDc-gcU4o/exec", {
+    const response = await fetch("https://script.google.com/macros/s/AKfycbw-xTFVZxHubMO-xq5rHPSgookn3cp9bJssrCascQ_FNRa8PPTdQU1qEGBUmdowoqGr/exec", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ events: eventsToSync })
