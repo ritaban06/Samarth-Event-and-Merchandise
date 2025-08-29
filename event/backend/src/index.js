@@ -244,13 +244,34 @@ async function syncEventsToSheets(events) {
   // Limit number of events in one batch
   const eventsToSync = events.slice(0, MAX_EVENTS_PER_SYNC);
   
-  console.log("🔄 Syncing with Google Sheets for events:", eventsToSync);
-  
+  // Preprocess events to include year mapping for Ignite event
+  const processedEvents = events.map(eventName => {
+    if (/^ignite(\s+|$|\d*|\s+\d*|\s*\d+\s*)/i.test(eventName)) {
+      const semester = parseInt(eventName.match(/\d+/)?.[0], 10); // Extract semester number from event name
+      let year = "N/A";
+      if (!isNaN(semester)) {
+        if (semester === 1 || semester === 2) {
+          year = "1";
+        } else if (semester === 3 || semester === 4) {
+          year = "2";
+        } else if (semester === 5 || semester === 6) {
+          year = "3";
+        } else if (semester === 7 || semester === 8) {
+          year = "4";
+        }
+      }
+      return { eventName, year }; // Include year in the event object
+    }
+    return { eventName }; // For non-Ignite events, just include the name
+  });
+
+  console.log("🔄 Syncing with Google Sheets for processed events:", processedEvents);
+
   try {
     const response = await fetch("https://script.google.com/macros/s/AKfycbwfYzDgcldTHfzObyOE4AMeux4oorkvUrJaWGWDjywqI8yNNlbJfZVTyrlB8ur8w4b8/exec", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ events: eventsToSync })
+      body: JSON.stringify({ events: processedEvents }) // Send processed events with year
     });
     
     if (!response.ok) {

@@ -109,6 +109,14 @@ function syncEventSheet(spreadsheet, eventName, registrations) {
   
   // Process each registration
   registrations.forEach(reg => {
+    // Special handling for Ignite event - use year from payload if available
+    const ignitePattern = /^ignite(\s+|$|\d*|\s+\d*|\s*\d+\s*)/i;
+    if (ignitePattern.test(eventName) && reg.additionalDetails) {
+      if (!reg.additionalDetails.year) {
+        Logger.log(`⚠️ Missing year for Ignite event registration: ${reg.uid}`);
+      }
+    }
+
     const values = headers.map(header => {
       switch (header) {
         case 'Registration ID': return reg.uid || 'N/A';
