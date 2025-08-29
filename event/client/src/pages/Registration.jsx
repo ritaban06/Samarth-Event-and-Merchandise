@@ -24,31 +24,36 @@ const Registration = ({ open, handleClose, event, user, updateEvents }) => {
   }, [user]);
 
   const handleChange = (e) => {
-    setRegistrationData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    const { name, value } = e.target;
+    setRegistrationData((prev) => {
+      const updatedData = { ...prev, [name]: value };
+
+      // Special case for Ignite event: Autofill year based on semester
+      if (name === "semester" && /^ignite(\s+|$|\d*|\s+\d*|\s*\d+\s*)/i.test(event?.eventName)) {
+        const semester = parseInt(value, 10);
+        if (!isNaN(semester)) {
+          if (semester === 1 || semester === 2) {
+            updatedData.year = "1";
+          } else if (semester === 3 || semester === 4) {
+            updatedData.year = "2";
+          } else if (semester === 5 || semester === 6) {
+            updatedData.year = "3";
+          } else if (semester === 7 || semester === 8) {
+            updatedData.year = "4";
+          } else {
+            updatedData.year = "N/A";
+          }
+        } else {
+          updatedData.year = "N/A";
+        }
+      }
+
+      return updatedData;
+    });
   };
 
   const handleSubmit = async () => {
     try {
-      // Special case for Ignite event: Autofill year based on semester
-      if (/^ignite(\s+|$|\d*|\s+\d*|\s*\d+\s*)/i.test(event?.eventName)) {
-        const semester = parseInt(registrationData.semester, 10);
-        if (!isNaN(semester)) {
-          if (semester === 1 || semester === 2) {
-            registrationData.year = "1";
-          } else if (semester === 3 || semester === 4) {
-            registrationData.year = "2";
-          } else if (semester === 5 || semester === 6) {
-            registrationData.year = "3";
-          } else if (semester === 7 || semester === 8) {
-            registrationData.year = "4";
-          } else {
-            registrationData.year = "N/A";
-          }
-        } else {
-          registrationData.year = "N/A";
-        }
-      }
-
       await axios.patch(`/api/events/${event._id}/register`, registrationData);
       updateEvents();
       handleClose();
