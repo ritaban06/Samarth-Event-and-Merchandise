@@ -248,7 +248,7 @@ async function syncEventsToSheets(events) {
   const processedEvents = events
     .filter(event => {
       if (!event.eventName) {
-        console.warn("⚠️ Skipping event with missing eventName:", event);
+        console.warn("⚠️ Skipping event with missing eventName:", JSON.stringify(event, null, 2));
         return false; // Exclude events without an eventName
       }
       return true;
