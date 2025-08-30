@@ -244,7 +244,7 @@ async function syncEventsToSheets(events) {
   // Limit number of events in one batch
   const eventsToSync = events.slice(0, MAX_EVENTS_PER_SYNC);
   
-  // Preprocess events to include year mapping for Ignite event
+  // Preprocess events to include year mapping for Ignite event and send complete event data
   const processedEvents = events
     .filter(event => {
       if (!event.eventName) {
@@ -254,9 +254,16 @@ async function syncEventsToSheets(events) {
       return true;
     })
     .map(event => {
+      // Create a complete event object with all necessary fields
+      const processedEvent = {
+        eventName: event.eventName,
+        additionalFields: event.additionalFields || [],
+        participants: event.participants || []
+      };
+      
+      // Special processing for Ignite event to add Year field
       if (event.eventName.toLowerCase() === "ignite") {
-        const participants = event.participants || [];
-        const participantsWithYear = participants.map(participant => {
+        const participantsWithYear = event.participants.map(participant => {
           const { Semester } = participant.additionalDetails || {};
           let year = "N/A";
           if (Semester) {
@@ -275,15 +282,16 @@ async function syncEventsToSheets(events) {
           }
           return { ...participant, additionalDetails: { ...participant.additionalDetails, Year: year } };
         });
-        return { eventName: event.eventName, participants: participantsWithYear }; // Include participants with mapped year
+        processedEvent.participants = participantsWithYear;
       }
-      return { eventName: event.eventName }; // For non-Ignite events, just include the name
+      
+      return processedEvent;
     });
 
   console.log("🔄 Syncing with Google Sheets for processed events:", processedEvents);
 
   try {
-    const response = await fetch("https://script.google.com/macros/s/AKfycbyhdUNAZsAdLwA9Ww-6WnIEZY482yIA192nDLt1ys8GdyY6DhQTT6bQPDVDqP7PSPeX/exec", {
+    const response = await fetch("https://script.google.com/macros/s/AKfycbzjHfkhT2HY-yTvWq6Hbmd1qkx-vC9HBBnG3IXdVEmIHUnnyyg-iSsNg16hITAqIpLV/exec", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ events: processedEvents }) // Send processed events with year details
