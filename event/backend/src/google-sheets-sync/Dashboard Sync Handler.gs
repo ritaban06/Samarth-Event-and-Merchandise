@@ -67,7 +67,7 @@ function syncDashboardData(registrationsData) {
   return { success: true, message: "All data synced to Google Sheets successfully!" };
 }
 
-function syncEventSheet(spreadsheet, eventName, registrations) {
+function syncEventSheet(spreadsheet, eventName, registrations, eventData = null) {
   Logger.log(`🔄 Syncing ${registrations.length} registrations for event: ${eventName}`);
   
   // Get or create sheet
@@ -76,17 +76,23 @@ function syncEventSheet(spreadsheet, eventName, registrations) {
     Logger.log(`📝 Creating new sheet for event: ${eventName}`);
     sheet = spreadsheet.insertSheet(eventName);
     
-    // Set up headers based on first registration
-    const firstReg = registrations[0];
+    // Set up headers
     const headers = [
       'Registration ID', 'Student Name', 'Email', 'Event Name', 'Payment Status',
       'Payment ID', 'Payment Type', 'Payment Date', 'Amount (₹)',
       'Team Name', 'Team UID', 'Team Role'
     ];
     
-    // Add any additional fields if present
-    if (firstReg.additionalDetails) {
-      Object.keys(firstReg.additionalDetails).forEach(key => {
+    // Add additional fields from event schema if available
+    if (eventData && eventData.additionalFields) {
+      eventData.additionalFields.forEach(field => {
+        if (!headers.includes(field.name)) {
+          headers.push(field.name);
+        }
+      });
+    } else if (registrations.length > 0 && registrations[0].additionalDetails) {
+      // Fallback: use first registration's additional details
+      Object.keys(registrations[0].additionalDetails).forEach(key => {
         if (!headers.includes(key)) headers.push(key);
       });
     }
@@ -177,11 +183,27 @@ function doPost(e) {
     // Handle both automatic sync (events list) and dashboard sync (registrations array)
     if (payload.events && Array.isArray(payload.events)) {
       // This is the automatic sync from the change stream
-      Logger.log(`📨 Received automatic sync request for events: ${payload.events.join(', ')}`);
+      Logger.log(`📨 Received automatic sync request for ${payload.events.length} events`);
       
-      // Process each event
-      for (const eventName of payload.events) {
-        syncSingleEvent(eventName);
+      // Process each event with complete data
+      for (const event of payload.events) {
+        if (event.eventName && event.participants) {
+          // Convert event participants to registration format for syncEventSheet
+          const registrations = event.participants.map(participant => ({
+            uid: participant.uid,
+            name: participant.name,
+            email: participant.email,
+            eventName: event.eventName,
+            payment: participant.payment,
+            additionalDetails: participant.additionalDetails,
+            team: participant.team
+          }));
+          
+          const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+           syncEventSheet(ss, event.eventName, registrations, event);
+        } else {
+          Logger.log(`⚠️ Skipping invalid event data: ${JSON.stringify(event)}`);
+        }
       }
       
       return ContentService.createTextOutput(JSON.stringify({
