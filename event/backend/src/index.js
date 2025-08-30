@@ -307,7 +307,26 @@ async function syncEventsToSheets(events) {
 
 // Unified event sync function that can handle both manual and automatic syncs
 async function syncEventsByName(eventNames) {
-  return await syncEventsToSheets(eventNames);
+  try {
+    const db = mongoose.connection.db;
+    const collection = db.collection("events");
+    
+    // Fetch full event documents from database using event names
+    const events = await collection.find({ 
+      eventName: { $in: eventNames } 
+    }).toArray();
+    
+    if (events.length === 0) {
+      console.log("⚠️ No events found for names:", eventNames);
+      return false;
+    }
+    
+    console.log(`📋 Found ${events.length} events to sync:`, events.map(e => e.eventName));
+    return await syncEventsToSheets(events);
+  } catch (error) {
+    console.error("❌ Error fetching events by name:", error);
+    return false;
+  }
 }
 
 async function watchEvents() {
